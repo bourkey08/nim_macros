@@ -1,8 +1,6 @@
 #Implements standard utility functions and macros (with, log, swap, toString ect)
 #Set this variable to toggle debug mode
-const debug = true
-
-import macros
+import macros, os
 
 #Swap 2 variables
 template swap(x: untyped, y: untyped): untyped =
@@ -32,19 +30,46 @@ macro with(args: untyped, body: untyped): untyped =
 
 #Implement a logging macro, this will then handle adding echos when in debug mode only
 macro log(args: untyped): untyped =
-    when debug:
-        result = quote do:
-            echo `args`;
+    when declared(debug):
+        when debug:
+            result = quote do:
+                echo `args`;
+        else:
+            result = quote do:
+                discard
     else:
-        result = quote do:
+        quote do:
             discard
 
-#Implement a macro for casting an array to a string
-macro toString(args: untyped): untyped = 
-    result = quote do:
-        var stringValue = ""
+macro importer(args: untyped): untyped =
+    #Define a list we will build up with the imports
+    var resp: seq[NimNode] = @[]
 
-        for b in `args`:
-            stringValue.add(b.char)
+    args.expectKind nnkStmtList
 
-        stringValue
+    for entry in args:
+        entry.expectKind nnkInfix
+        entry.expectLen 3
+        entry[2].expectKind nnkIdent
+
+        let moduleName = entry[1]
+        let alias = entry[2]   
+
+        let importStatment = quote do:
+            from `moduleName` as `alias` import nil
+
+        resp.add(
+            importStatment
+        )         
+
+    for entry in resp:
+        result = quote do:
+            `entry`
+            `result`
+
+    result.copyLineInfo(args)
+
+    #If macroDebug is defined and macroDebug is true then log the tree representation of the result
+    when declared(macroDebug):
+        when macroDebug:
+            hint result.treeRepr

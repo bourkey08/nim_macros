@@ -100,6 +100,7 @@ macro `&`(x: typed, y: typed): untyped =
             `x` and `y`    
 
 template `power`(x: untyped, y: untyped): untyped =
+    
     when x is not float64|float32 and y is not float64|float32:
         x ^ y
     else:
@@ -108,10 +109,16 @@ template `power`(x: untyped, y: untyped): untyped =
 macro `**`(x: typed, y: typed): untyped = 
     newCall(bindSym"power", x, y)
 
+
 #Define a floor division operator
+template `floordiv`(x: untyped, y: untyped): untyped =
+    when x is not float64|float32 and y is not float64|float32:
+        math.floor(x / y)
+    else:
+        math.floor(float64(x) / float64(y))
+
 macro `//`(x: typed, y: typed): untyped = 
-    result = quote do:
-        math.floor(`x` / `y`)
+    newCall(bindSym"floordiv", x, y)
 
 #Define ! as a not operator
 macro `!`(x: untyped): untyped =
