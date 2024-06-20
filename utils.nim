@@ -73,3 +73,16 @@ macro importer(args: untyped): untyped =
     when declared(macroDebug):
         when macroDebug:
             hint result.treeRepr
+
+template`reG`(pat: string, data: string): untyped =
+    when not declared(re2):
+        import regex
+
+    var result: seq[string] = @[]
+    let exp = re2(pat)
+
+    for entry in regex.findAll(data, exp):
+        for capt_group in entry.captures:
+            result.add(data[capt_group])
+
+    result
