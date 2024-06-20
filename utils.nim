@@ -1,6 +1,7 @@
 #Implements standard utility functions and macros (with, log, swap, toString ect)
 #Set this variable to toggle debug mode
 import macros, os
+import regex
 
 #Swap 2 variables
 template swap(x: untyped, y: untyped): untyped =
@@ -75,9 +76,6 @@ macro importer(args: untyped): untyped =
             hint result.treeRepr
 
 template`reG`(pat: string, data: string): untyped =
-    when not declared(re2):
-        import regex
-
     var result: seq[string] = @[]
     let exp = re2(pat)
 
