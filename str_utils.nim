@@ -14,3 +14,12 @@ macro toString(args: untyped): untyped =
             stringValue.add(b.char)
 
         stringValue
+
+macro u8(str: string): untyped =    
+    quote do:
+        var resp: seq[byte] = @[]
+
+        for c in `str`:
+            resp.add(byte char(c))
+
+        resp
