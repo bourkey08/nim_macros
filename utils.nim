@@ -3,6 +3,13 @@
 import macros, os
 import regex
 
+proc alloca(n: int): pointer {.importc, header: "<alloca.h>".}
+proc malloc(n: int): pointer {.importc, header: "<stdlib.h>".}
+
+#Enable the profiler if the compileOption is set
+when compileOption("profiler"):
+    import nimprof
+
 #Swap 2 variables
 template swap(x: untyped, y: untyped): untyped =
     let tmp = x;
@@ -84,3 +91,13 @@ template`reG`(pat: string, data: string): untyped =
             result.add(data[capt_group])
 
     result
+
+#Define a c style ternary operator, we cant use ? : in nim so we have to implement our own
+macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
+    quote do:
+        var resp: type(`trueVal`)
+        if `cond`:
+            resp = `trueVal`
+        else:
+            resp = `falseVal`
+        resp

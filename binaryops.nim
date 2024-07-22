@@ -179,3 +179,4 @@ const mod64: uint64 = (uint64(2) ** uint64(64)) - 1
 const mod32: uint32 = (uint32(2) ** uint32(32)) - 1
 const mod16: uint16 = (uint16(2) ** uint16(16)) - 1
 const mod8: uint8 = (uint8(2) ** uint8(8)) - 1
+
