@@ -6,3 +6,4 @@ when not declared(with):
     include "./str_utils.nim"
     include "./num_utils.nim"
     include "./config.nim"
+    include "./system.nim"
