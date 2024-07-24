@@ -145,3 +145,63 @@ macro fromHex(args: string): openArray[byte] =
             resp.add(byte(upper shl 4 or lower))
 
         resp
+
+#Shortcut functions for checking the contents of strings match specific criteria
+macro isdigit(val: string): bool =
+    quote do:
+        var result = true
+
+        for c in `val`:
+            let value = ord(c)
+            if value < 48 or value > 57:
+                result = false
+                break
+
+        result
+
+macro isalnum(val: string): bool =
+    quote do:
+        var result = true
+
+        for c in `val`:
+            let value = ord(c)
+            if (value < 48 or value > 57) and (value < 65 or value > 90) and (value < 97 or value > 122):
+                result = false
+                break
+
+        result
+
+macro isalpha(val: string): bool =
+    quote do:
+        var result = true
+
+        for c in `val`:
+            let value = ord(c)
+            if (value < 65 or value > 90) and (value < 97 or value > 122):
+                result = false
+                break
+
+        result
+
+macro isupper(val: string): bool =
+    quote do:
+        var result = true
+
+        for c in `val`:
+            let value = ord(c)
+            if value < 65 or value > 90:
+                result = false
+                break
+
+        result
+
+macro islower(val: string): bool =
+    quote do:
+        var result = true
+
+        for c in `val`:
+            let value = ord(c)
+            if value < 97 or value > 122:
+                result = false
+                break
+        result
