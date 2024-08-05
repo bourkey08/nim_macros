@@ -1,7 +1,7 @@
 #Implements utility functions and macros for system operations
 import std/[envvars, macros, strutils, sequtils]
 #Takes a string containing 1 or more enviromental variables and replaces them with there values before returning the string
-func parseEnvString(str: string): string {.inline.} =
+proc parseEnvString(str: string): string {.inline.} =
     var result = ""
 
     var i=0;
