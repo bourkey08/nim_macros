@@ -348,7 +348,7 @@ proc display(self: var StatusScreen) =
     stdout.write("└" & "─".repeat(width - 2) & "┘")
 
     #Now flush the buffer to ensure the console is updated 
-    stdout.flushFile()
+    #stdout.flushFile()
     stdout.resetAttributes()
 
 #Define a function for creating a new status screen
