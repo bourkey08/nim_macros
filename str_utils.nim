@@ -1,8 +1,23 @@
 import macros, strutils
 
-#Allow python and js style string concatenation
+#Allow python and js style string concatenation as well as mixing string and byte sequences
 template `+=`(s: var string, x: string) =
     s = s & x
+
+template `+=`(s: var seq[byte], x: seq[byte]) =
+    s = s & x
+
+template `+=`(s: var seq[byte], x: byte) =
+    s.add(x)
+
+template `+=`(s: var string, x: seq[byte]) =
+    s = s & $x
+
+template `+=`(s: var string, x: byte) =
+    s = s & $x
+
+template `+=`(s: var seq[byte], x: string) =
+    s = s & u8(x)
 
 #Implement a macro for casting an array to a string
 macro toString(args: untyped): untyped = 

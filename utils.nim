@@ -5,6 +5,7 @@ import regex
 
 proc alloca(n: int): pointer {.importc, header: "<alloca.h>".}
 proc malloc(n: int): pointer {.importc, header: "<stdlib.h>".}
+proc free(p: pointer) {.importc, header: "<stdlib.h>".}
 
 #Enable the profiler if the compileOption is set
 when compileOption("profiler"):
