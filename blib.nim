@@ -2,8 +2,10 @@
 when not declared(with):
     include "./binaryops.nim"
     include "./utils.nim"
-    include "./console.nim"
     include "./str_utils.nim"
     include "./num_utils.nim"
     include "./config.nim"
     include "./system.nim"
+
+when declared(bconsole):
+    include "./console.nim"
