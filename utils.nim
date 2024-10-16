@@ -102,3 +102,7 @@ macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
         else:
             resp = `falseVal`
         resp
+
+#Behaves like the python pass keyword (does nothing)
+template pass(): untyped =
+    discard 1
