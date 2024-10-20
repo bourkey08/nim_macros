@@ -26,7 +26,6 @@ proc parseEnvString(str: string): string {.inline.} =
 
     return result  
 
-
 #Takes a path and splits it into its folders/file
 macro splitPath(str: string): seq[string] =
     quote do:
