@@ -106,3 +106,7 @@ macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
 #Behaves like the python pass keyword (does nothing)
 template pass(): untyped =
     discard 1
+
+#Shortcut for raising a generic exception with a message
+template throw(msg: string): untyped = 
+    raise newException(Exception, msg)
