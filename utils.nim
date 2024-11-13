@@ -3,6 +3,10 @@
 import macros, os
 import regex
 
+#Shortcut for raising a generic exception with a message
+template throw(msg: string): untyped = 
+    raise newException(Exception, msg)
+
 proc alloca(n: int): pointer {.importc, header: "<alloca.h>".}
 proc malloc(n: int): pointer {.importc, header: "<stdlib.h>".}
 proc free(p: pointer) {.importc, header: "<stdlib.h>".}
@@ -106,7 +110,3 @@ macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
 #Behaves like the python pass keyword (does nothing)
 template pass(): untyped =
     discard 1
-
-#Shortcut for raising a generic exception with a message
-template throw(msg: string): untyped = 
-    raise newException(Exception, msg)
