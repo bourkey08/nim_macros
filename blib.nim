@@ -7,6 +7,7 @@ when not declared(with):
     include "./config.nim"
     include "./system.nim"
     include "./seq_utils.nim"
+    include "./hashing.nim"
 
 when declared(bconsole):
     include "./console.nim"
