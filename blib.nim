@@ -8,7 +8,7 @@ when not declared(with):
     include "./system.nim"
     include "./seq_utils.nim"
     include "./hashing.nim"
-    include "./time.nim"
+    import "./time.nim"
 
 when declared(bconsole):
     include "./console.nim"
