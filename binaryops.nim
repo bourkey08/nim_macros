@@ -174,6 +174,17 @@ macro `--`(x: untyped): untyped =
     result = quote do:
         `x` -= 1
 
+#Defime increment operators
+macro `+++`(x: untyped): untyped =
+    result = quote do:
+        `x` += 1
+        `x`
+        
+macro `---`(x: untyped): untyped =
+    result = quote do:
+        `x` -= 1
+        `x`
+
 #Define constants for modulo operations
 const mod64: uint64 = (uint64(2) ** uint64(64)) - 1
 const mod32: uint32 = (uint32(2) ** uint32(32)) - 1
