@@ -170,26 +170,3 @@ template formatNumber(num: any, arg1: static auto = -2, arg2: static auto = -2):
             for i in 0..<parts[1].len:
                 outstr[+++idx] = parts[1][i]
         outstr
-
-
-import std/[times, monotimes]
-
-let s1 = getMonoTime()
-
-let val = 1234556789.123456789
-
-for i in 0..<1_000:
-    discard formatNumber(val, 2)
-
-let runtime = getMonoTime() - s1
-
-echo "Took: ", $inMicroseconds(runtime), "us"
-
-echo formatNumber(val, ",", "3")
-echo formatNumber(val, "4", ",")
-echo formatNumber(val, "5", "")
-echo formatNumber(val, "false", "6")
-echo formatNumber(val, false, 2)
-echo formatNumber(val, 2, false)
-echo formatNumber(val, true, 2.0)
-echo formatNumber(val, 2.0, true)
