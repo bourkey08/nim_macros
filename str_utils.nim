@@ -149,7 +149,7 @@ macro toHex(args: openArray[byte]): string =
         resp
 
 #Macros for parsing a hex string into a sequence of bytes
-macro fromHex(args: string): openArray[byte] = 
+macro fromHex(args: string): seq[byte] = 
     quote do:
         var resp: seq[byte] = @[]
 
