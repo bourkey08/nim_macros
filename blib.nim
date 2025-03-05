@@ -12,6 +12,7 @@ when not declared(with):
     include "./hashing.nim"
     include "./binaryunits.nim"
     import "./time.nim"
+    import "./concurrency.nim"
 
 when declared(bconsole):
     include "./console.nim"
