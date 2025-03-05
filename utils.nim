@@ -112,7 +112,7 @@ template pass(): untyped =
     discard 1
 
 #Macro to get the size of a pointer type object at compile time
-macro psizeof(t: typedesc): untyped =
+macro psizeof*(t: typedesc): untyped =
     let ty = t.getType()
 
     result = quote do:

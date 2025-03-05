@@ -1,4 +1,5 @@
 import std/[locks, asyncdispatch, compilesettings]
+from "./utils.nim" import psizeof
 
 const FALLBACK_SLEEP_DELAY = 0.01#10us The delay between checking for changes when using the fallback method for async awaits between threads
 
@@ -43,7 +44,7 @@ else:#Otherwise fall back to using a pointer object to get around the gc
         counter: uint64
 
     proc newAsyncCond*(): AsyncCond =
-        var resp: AsyncCond = cast[AsyncCond](allocShared(sizeof(AsyncCond)))
+        var resp: AsyncCond = cast[AsyncCond](allocShared(psizeof(AsyncCond)))
         resp.event = newFuture[void]()
         resp.counter = uint64 0
 
