@@ -17,13 +17,13 @@ proc keepAlive() {.async.} =
 
 #When using a memory mangment method that has a shared heap then we can use a ref object
 when fallBackThreading == false:
-    type AsyncCond = ref object
+    type AsyncCond* = ref object
         event: Future[void]
         lock: Lock
         condLock: Lock
         cond: Cond
 
-    proc newAsyncCond(): AsyncCond =
+    proc newAsyncCond*(): AsyncCond =
         var resp = AsyncCond(
             event: newFuture[void]()
         )
@@ -35,14 +35,14 @@ when fallBackThreading == false:
         return resp
 
 else:#Otherwise fall back to using a pointer object to get around the gc
-    type AsyncCond = ptr object
+    type AsyncCond* = ptr object
         event: Future[void]
         lock: Lock
         condLock: Lock
         cond: Cond
         counter: uint64
 
-    proc newAsyncCond(): AsyncCond =
+    proc newAsyncCond*(): AsyncCond =
         var resp: AsyncCond = cast[AsyncCond](allocShared(sizeof(AsyncCond)))
         resp.event = newFuture[void]()
         resp.counter = uint64 0
@@ -55,7 +55,7 @@ else:#Otherwise fall back to using a pointer object to get around the gc
 
         return resp
 
-proc set(self: AsyncCond) =
+proc set*(self: AsyncCond) =
     #Get the locks for both sync and async operations
     self.lock.acquire()
     self.condLock.acquire()
@@ -77,7 +77,7 @@ proc set(self: AsyncCond) =
     self.condLock.release()
     self.lock.release()
 
-proc wait(self: AsyncCond) {.async.} =
+proc wait*(self: AsyncCond) {.async.} =
     when fallBackThreading == true:
         var counter = self.counter
 
@@ -105,6 +105,6 @@ proc wait(self: AsyncCond) {.async.} =
 
         self.lock.release()
 
-proc waitSync(self: AsyncCond) =
+proc waitSync*(self: AsyncCond) =
     #Await the syncronous condition
     self.cond.wait(self.condLock)

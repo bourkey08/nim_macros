@@ -12,6 +12,8 @@ when not declared(with):
     include "./hashing.nim"
     include "./binaryunits.nim"
     import "./time.nim"
+
+when not declared(AsyncCond):
     import "./concurrency.nim"
 
 when declared(bconsole):
