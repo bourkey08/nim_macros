@@ -6,6 +6,7 @@ const FALLBACK_SLEEP_DELAY = 0.01#10us The delay between checking for changes wh
 #Enable experimental features that are used
 {.experimental: "codeReordering".}
 
+
 const gcUsed = querySetting(gc)
 when gcUsed == "arc" or gcUsed == "orc" or gcUsed == "none" or gcUsed == "atomicArc":
     const fallBackThreading = false
@@ -35,7 +36,7 @@ when fallBackThreading == false:
 
         return resp
 
-else:#Otherwise fall back to using a pointer object to get around the gc
+else:#Otherwise fall back to using a pointer object to get around the gc        
     type AsyncCond* = ptr object
         event: Future[void]
         lock: Lock
@@ -44,7 +45,7 @@ else:#Otherwise fall back to using a pointer object to get around the gc
         counter: uint64
 
     proc newAsyncCond*(): AsyncCond =
-        var resp: AsyncCond = cast[AsyncCond](allocShared(psizeof(AsyncCond)))
+        var resp: AsyncCond = cast[AsyncCond](allocShared(psizeof(AsyncCond) + 1024))
         resp.event = newFuture[void]()
         resp.counter = uint64 0
 
