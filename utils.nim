@@ -116,3 +116,11 @@ macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
 #Behaves like the python pass keyword (does nothing)
 template pass(): untyped =
     discard 1
+
+#Macro to get the size of a pointer type object at compile time
+macro psizeof*(t: typedesc): untyped =
+    let ty = t.getType()
+
+    result = quote do:
+        let obj = create(`ty`)
+        sizeof (obj[][])
