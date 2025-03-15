@@ -149,9 +149,9 @@ func u64x2(fhash: FHash): array[2, uint64] {.inline.} =
             uint64(fhash[14]) << 8,
             uint64(fhash[15])
         )
-    ]    return cast[FHash](resp)
+    ]
 
-
+when defined(linux) or defined(windows):
     #Define a function that will be used to calculate the hash of a file on disk by passing in a path and optionally specifying the block size to read the file in
     proc calcFileHash(path: string, BlockSize: static int=(1024*1024)): FHash =#Default to 1MB blocks as this is a good mix between memeory usage and performance on HDDs/IOPS limited systems
         var buff: array[BlockSize, char]
