@@ -26,3 +26,28 @@ func calcFHash[T](data: seq[T]): FHash {.inline.} =
 
     let resp = secureHash(arry)
     return cast[FHash](resp)
+
+#Only include the file hashing functions on systems that are 32bit or larger and not standalone
+when sizeof(int) >= 4 and not defined(standalone):
+    #Define a function that will be used to calculate the hash of a file on disk by passing in a path and optionally specifying the block size to read the file in
+    proc calcFileHash(path: string, BlockSize: static int=(1024*1024)): FHash =#Default to 1MB blocks as this is a good mix between memeory usage and performance on HDDs/IOPS limited systems
+        var buff: array[BlockSize, char]
+
+        #Define a hash state object for the file
+        var hashState = newSha1State()
+
+        #Open the file for reading and read until we reach EOF
+        with open(path, fmRead) as f:
+            while true:
+                #Read a block of data from the file into the buffer and return the number of bytes read
+                let bytesRead = f.readChars(buff, 0, BlockSize)
+
+                #If we have reached the end of the file break the loop so we can finalise the hash
+                if bytesRead == 0:
+                    break
+
+                hashState.update(buff[0..<bytesRead])
+
+        #Return the hash of the file
+        let resp = hashState.finalize()
+        return cast[FHash](resp)
