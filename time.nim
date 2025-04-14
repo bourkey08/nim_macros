@@ -206,3 +206,45 @@ func parseTime*(val: string, unit: string = "s"): int {.inline.} =
         return seconds div 3600
     else:
         raise newException(ValueError, "Invalid unit string");
+
+func formatDuration*(duration: float|float64|float32|int|int64|int32|uint64|uint32|uint, unit: string = "s"): string  =
+    #First convert the duration to seconds
+    var seconds = 0
+    case unit.toLower():
+    of "ms":
+        seconds = int(float64(duration) / 1_000)
+    of "s":
+        seconds = int(duration)
+    of "m":
+        seconds = int(duration) * 60
+    of "h":
+        seconds = int(duration) * 3600
+    of "d":
+        seconds = int(duration) * 86400
+    else:
+        raise newException(ValueError, "Invalid unit string");
+
+    #Now format the seconds as a string
+    var parts: seq[string] = @[]
+
+    for s in [86400, 3600, 60, 1]:
+        if seconds > s:
+            var val = seconds div s
+            seconds = seconds mod s
+            parts.add $val
+
+    #Now join the parts into a single string
+    if parts.len == 4:
+        if parts[0] == "1":
+            return parts[0] & " day, " & parts[1] & ":" & parts[2] & ":" & parts[3]
+        else:
+            return parts[0] & " days, " & parts[1] & ":" & parts[2] & ":" & parts[3]
+    elif parts.len == 3:
+        return parts[0] & ":" & parts[1] & ":" & parts[2]
+    elif parts.len == 2:
+        return parts[0] & ":" & parts[1]
+    elif parts.len == 1:
+        return parts[0]
+    else:
+        return "0"#Return 0 to avoid crashing the program 
+        
