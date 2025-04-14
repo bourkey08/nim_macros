@@ -228,10 +228,16 @@ func formatDuration*(duration: float|float64|float32|int|int64|int32|uint64|uint
     var parts: seq[string] = @[]
 
     for s in [86400, 3600, 60, 1]:
-        if seconds > s:
+        if seconds > s:               
             var val = seconds div s
             seconds = seconds mod s
-            parts.add $val
+            var strVal = $val
+
+            if s != 86400:#For the 3 time parts ensure its always 2 digits
+                if strVal.len < 2:
+                    strVal = "0" & strVal
+
+            parts.add(strVal)
 
     #Now join the parts into a single string
     if parts.len == 4:
