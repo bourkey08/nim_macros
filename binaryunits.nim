@@ -63,3 +63,46 @@ func parseBinaryUnits(text: string, retBits: static[bool]=false): int {.inline.}
         multiplier * 8
 
     return multiplier * parseInt(intstr)
+
+
+#Takes a value in bytes and returns it formatted as a string with the appropriate unit
+proc formatBinaryUnits(value: int, places: int = 2): string {.inline.} =
+    #First lets work out the units to use and divide out the value as we go
+    var unit: string = "B"
+    var val= float64(value)
+
+    while val >= 1024:
+        val /= 1024
+        case unit[0]:
+        of 'B':
+            unit = "KB"
+        of 'K':
+            unit = "MB"
+        of 'M':
+            unit = "GB"
+        of 'G':
+            unit = "TB"
+        of 'T':
+            unit = "PB"
+        of 'P':
+            unit = "EB"
+        of 'E':
+            unit = "ZB"
+        of 'Z':
+            unit = "YB"
+        of 'Y':
+            unit = "RB"
+        of 'R':
+            unit = "QB"
+        else:
+            break
+
+    #Now format the value to the required number of decimal places
+    var resp = $val
+    if places > 0:
+        resp = resp.split(".")[0] & "." & resp.split(".")[1][0..<places]
+    else:
+        resp = resp.split(".")[0]
+
+    #And return the value with the unit
+    return resp & " " & unit
