@@ -19,6 +19,9 @@ template `+=`(s: var string, x: byte) =
 template `+=`(s: var seq[byte], x: string) =
     s = s & u8(x)
 
+template `+`(s1: string, s2: string): string =
+    s1 & s2
+    
 #Implement a macro for casting an array to a string
 macro toString(args: untyped): untyped = 
     result = quote do:
