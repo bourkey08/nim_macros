@@ -1,5 +1,7 @@
 #Delay function
 proc delay_ms(us: uint16) {.importc: "_delay_ms", header: "util/delay.h".}
+proc delay_us(us: uint16) {.importc: "_delay_us", header: "util/delay.h".}
+proc delay_ns(ns: uint32) {.importc: "_delay_ns", header: "util/delay.h".}
 
 #Digital IO
 {.pragma: digitalWrite, importc, header: "<wiring_digital.c>".}
