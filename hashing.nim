@@ -1,10 +1,14 @@
 #Implements a few shortcuts for hashing functions
 #Note: None of these are intended to be secure they are for hashing keys in tables/btrees ect
-import checksums/sha1
+import checksums/[sha1, sha2]
 import std/bitops
 
 #Define a type for the "fhash", this should always be used in place of array[20, byte] when using a hash as it allows it to be easily changed in the future
 type FHash = array[20, byte]
+type FHash2 = array[32, byte]#Used for 256bit hash type rather than the 160bit sha1 based hashes
+
+when defined(release):
+    {.passC: "-march=native -O3 -mtune=intel -msse4.2 -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2
 
 #Takes a string and calculates the hash returning it as a fhash (20 bytes) rather than a hex string
 func calcFHash(data: string): FHash {.inline.} =  
@@ -27,6 +31,54 @@ func calcFHash[T](data: seq[T]): FHash {.inline.} =
 
     let resp = secureHash(arry)
     return cast[FHash](resp)
+
+
+#Takes a string and calculates the hash returning it as an fhash2(32bytes)
+proc calcFHash2(data: string): FHash2 {.inline.} =
+    #Create a blank sha512 state
+    var state = initSha_512()
+    
+    #Update it with the data
+    state.update(data)
+
+    #Finalize the hash and return it as an a digest
+    let digest = state.digest()
+
+    #Cast this to a fhash2 dropping the remaining 32bytes
+    let resp =  cast[ptr FHash2](addr digest)[]
+    
+    return resp
+
+#As above but for sequences of characters
+proc calcFHash2(data: openArray[char]): FHash2 {.inline.} =
+    #Create a blank sha512 state
+    var state = initSha_512()
+
+    #Update it with the data
+    state.update(data)
+
+    #Finalize the hash and return it as an a digest
+    let digest = state.digest()
+
+    #Cast this to a fhash2 dropping the remaining 32bytes
+    let resp =  cast[ptr FHash2](addr digest)[]
+    
+    return resp
+
+#As above but for sequences of bytes
+proc calcFHash2[T](data: seq[T]): FHash2 {.inline.} =
+    #Create a blank sha512 state
+    var state = initSha_512()
+
+    state.update(cast[seq[char]](data))
+
+    #Finalize the hash and return it as an a digest
+    let digest = state.digest()
+
+    #Cast this to a fhash2 dropping the remaining 32bytes
+    let resp =  cast[ptr FHash2](addr digest)[]
+    
+    return resp
 
 #Define functions to get a portion of the hash as unsigned ints of various lengths
 #These ints will have even distribution over a smaller keyspace, useful for hash table sharding/data partitioning
@@ -174,3 +226,25 @@ when defined(linux) or defined(windows):
         #Return the hash of the file
         let resp = hashState.finalize()
         return cast[FHash](resp)
+
+    proc calcFileHash2(path: string, BlockSize: static int=(1024*1024)): FHash2 =#Default to 1MB blocks as this is a good mix between memeory usage and performance on HDDs/IOPS limited systems
+        var buff: array[BlockSize, char]
+
+        #Define a hash state object for the file
+        var hashState = initSha_512()
+
+        #Open the file for reading and read until we reach EOF
+        with open(path, fmRead) as f:
+            while true:
+                #Read a block of data from the file into the buffer and return the number of bytes read
+                let bytesRead = f.readChars(buff, 0, BlockSize)
+
+                #If we have reached the end of the file break the loop so we can finalise the hash
+                if bytesRead == 0:
+                    break
+
+                hashState.update(buff[0..<bytesRead])
+
+        #Return the hash of the file
+        let resp = hashState.digest()
+        return cast[FHash2](resp)
