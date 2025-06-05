@@ -7,9 +7,6 @@ import std/bitops
 type FHash = array[20, byte]
 type FHash2 = array[32, byte]#Used for 256bit hash type rather than the 160bit sha1 based hashes
 
-when defined(release):
-    {.passC: "-march=native -O3 -mtune=intel -msse4.2 -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2
-
 #Takes a string and calculates the hash returning it as a fhash (20 bytes) rather than a hex string
 func calcFHash(data: string): FHash {.inline.} =  
     let resp = secureHash(data)
