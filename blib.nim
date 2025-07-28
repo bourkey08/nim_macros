@@ -33,3 +33,7 @@ when not declared(with):
 
     when defined(js):
         include "./js.nim"
+
+when defined(simd):
+    when defined(release):
+        {.passC: "-march=native -O3 -mtune=intel -msse4.2 -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2

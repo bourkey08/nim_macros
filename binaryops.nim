@@ -9,23 +9,23 @@ import math
 #Rotate Right
 template `rotateright`(x: untyped, y: untyped): untyped =
     when x is uint16:
-        (`x` shr `y`) + ((`x` shl (uint16(16) - uint16 `y`)))
+        (((`x` shr `y`) + ((`x` shl (uint16(16) - uint16 `y`)))))
 
     elif x is int16:
-        (`x` shr `y`) + (`x` & (int16(2) ** (int16(32) - int16 `y`)))
+        (((`x` shr `y`) + (`x` & (int16(2) ** (int16(32) - int16 `y`)))))
 
     elif x is uint32:
-        (`x` shr `y`) + (`x` & (uint32(2) ** (uint32(32) - uint32 `y`)))
+        (((`x` shr `y`) + (`x` & (uint32(2) ** (uint32(32) - uint32 `y`)))))
 
     elif x is int32:
-        (`x` shr `y`) + (`x` & (int32(2) ** (int32(32) - int32 `y`)))
+        (((`x` shr `y`) + (`x` & (int32(2) ** (int32(32) - int32 `y`)))))
 
     elif x is uint64:
-        (`x` shr `y`) + (`x` & (uint64(2) ** (uint64(32) - uint64 `y`)))
+        (((`x` shr `y`) + (`x` & (uint64(2) ** (uint64(32) - uint64 `y`)))))
 
     elif x is int64:
-        (`x` shr `y`) + (`x` & (int64(2) ** (int64(32) - int64 `y`)))
-    
+        (((`x` shr `y`) + (`x` & (int64(2) ** (int64(32) - int64 `y`)))))
+
     else:
         raise ValueError("Invalid type for rotateleft")
 
@@ -35,22 +35,22 @@ macro `>>>`(x, y: untyped): untyped =
 #Rotate left
 template `rotateleft`(x: untyped, y: untyped): untyped =
     when x is uint16:
-        (`x` shl `y`) + (`x` shr (uint16(16) - uint16 `y`))
+        ((`x` shl `y`) + (`x` shr (uint16(16) - uint16 `y`)))
 
     elif x is int16:        
-        (`x` shl `y`) + (`x` shr (int16(16) - int16 `y`))
+        ((`x` shl `y`) + (`x` shr (int16(16) - int16 `y`)))
 
     elif x is uint32:
-        (`x` shl `y`) + (`x` shr (uint32(32) - uint32 `y`))
+        ((`x` shl `y`) + (`x` shr (uint32(32) - uint32 `y`)))
 
     elif x is int32:
-        (`x` shl `y`) + (`x` shr (int32(32) - int32 `y`))
+        ((`x` shl `y`) + (`x` shr (int32(32) - int32 `y`)))
 
     elif x is uint64:
-        (`x` shl `y`) + (`x` shr (uint64(64) - uint64 `y`))
-        
+        ((`x` shl `y`) + (`x` shr (uint64(64) - uint64 `y`)))
+
     elif x is int64:
-        (`x` shl `y`) + (`x` shr (int64(64) - int64 `y`))
+        ((`x` shl `y`) + (`x` shr (int64(64) - int64 `y`)))
 
     else:
         raise ValueError(Exception, "Invalid type for rotateleft")
@@ -61,12 +61,12 @@ macro `<<<`(x, y: untyped): untyped =
 macro `<<`(x, y: untyped): untyped =    
     #result = nnkInfix.newTree(newIdentNode("shl"), x, y)
     result = quote do:
-        (`x` shl `y`)
+        ((`x` shl `y`))
 
 macro `>>`(x, y: untyped): untyped =
     #result = nnkInfix.newTree(newIdentNode("shr"), x, y)
     result = quote do:
-        (`x` shr `y`)
+        ((`x` shr `y`))
 
 macro `%`(x, y: untyped): untyped =
     result = quote do:          
@@ -148,11 +148,11 @@ macro `|=`(x, y: untyped): untyped =
 
 macro `>>=`(x, y: untyped): untyped =
     result = quote do:
-        `x` = `x` >> `y`
+        `x` = ((`x` >> `y`))
 
 macro `<<=`(x, y: untyped): untyped =
     result = quote do:
-        `x` = `x` << `y`
+        `x` = ((`x` << `y`))
 
 macro `**=`(x, y: untyped): untyped =
     result = quote do:
