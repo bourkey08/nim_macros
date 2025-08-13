@@ -124,3 +124,10 @@ macro psizeof*(t: typedesc): untyped =
     result = quote do:
         let obj = create(`ty`)
         sizeof (obj[][])
+
+
+template label(name) =
+    {.emit: astToStr(name) & ":;".}
+
+template goto(name) =
+    {.emit: "goto " & astToStr(name) & ";".}
