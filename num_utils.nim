@@ -3,6 +3,7 @@ import macros
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 #            Define a function that formats a number as a string optionally rounding to a fixed number of digits and with thousand seperators
 #------------------------------------------------------------------------------------------------------------------------------------------------------
+
 template formatNumber(num: any, arg1: static auto = -2, arg2: static auto = -2): string =
     when not declared(getStrasInt):
         func getStrasInt(arg: static string): int {.compiletime.} =
@@ -52,13 +53,13 @@ template formatNumber(num: any, arg1: static auto = -2, arg2: static auto = -2):
         else:
             when arg1 is int|int8|int16|int32|int64|uint8|uint16|uint32|uint64|float|float32|float64 and arg2 is int|int8|int16|int32|int64|uint8|uint16|uint32|uint64|float|float32|float64:
                 #Check if either of the values is -2, if it is then this is treated as no argument passed for that parameter so we need to work out what the remaining val is
-                when arg1 == -2 and arg2 == -2:
+                when arg1 == int(-2) and arg2 == int(-2):
                     discard#Do nothing let the default values be used
 
-                when arg1 == -2:
+                when arg1 == int(-2):
                     const roundTo = arg2
 
-                when arg2 == -2:
+                when arg2 == int(-2):
                     const roundTo = arg1                    
 
                 else:#Otherwise 2 actual numbers is an error
