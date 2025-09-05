@@ -10,3 +10,9 @@ template destructor(t: typedesc, body: untyped): untyped =
     else:
         proc `=destroy`(x: `t`) =
             `body`
+
+#Macro that wraps a block of code in a gcsafe block
+macro gcSafe(body: untyped): untyped =
+    result = quote do:
+        {.cast(gcsafe).}:
+            `body`
