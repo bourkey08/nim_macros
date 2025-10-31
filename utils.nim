@@ -103,7 +103,7 @@ template throw(msg: string): untyped =
     raise newException(Exception, msg)
 
 
-#Define a c style ternary operator, we cant use ? : in nim so we have to implement our own
+#Define a c style ternary operator
 macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
     quote do:
         var resp: type(`trueVal`)
@@ -112,6 +112,12 @@ macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
         else:
             resp = `falseVal`
         resp
+
+#Define a c style conditional operator
+macro `?`*(condition: untyped, truebranch: untyped, falsebranch: untyped): untyped =    
+    result = quote do:
+        if `condition`: `truebranch`
+        else: `falsebranch`
 
 #Behaves like the python pass keyword (does nothing)
 template pass(): untyped =
