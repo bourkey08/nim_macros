@@ -15,7 +15,8 @@ when not declared(with):
 
         when defined(linux) or defined(macosx) or defined(windows):    
             include "./system.nim"    
-            include "./config.nim"
+            include "./config.nim"            
+            include "./async_helpers.nim"
 
         #Incldue the arduino specific functions only when the arduino flag is set
         when declared(arduino):
