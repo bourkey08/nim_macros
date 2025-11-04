@@ -22,7 +22,7 @@ when not declared(with):
         when declared(arduino):
             include "./arduino/arduino.nim"
 
-        when not defined(standalone):
+        when not defined(standalone) and defined(Thread):
             include "./threads.nim"
             when not declared(AsyncCond):
                 import "./concurrency.nim"       
