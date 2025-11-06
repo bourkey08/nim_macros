@@ -78,15 +78,15 @@ when not defined(standalone):
 when sizeof(int) >= 4:
     import regex
 
-    template`reG`(pat: string, data: string): untyped =
-        var result: seq[string] = @[]
+    func`reG`(pat: string, data: string): seq[string] {.inline.} =
+        var resp: seq[string] = @[]
         let exp = re2(pat)
 
         for entry in regex.findAll(data, exp):
             for capt_group in entry.captures:
-                result.add(data[capt_group])
+                resp.add(data[capt_group])
 
-        result
+        return resp
 
 proc alloca(n: int): pointer {.importc, header: "<alloca.h>".}
 proc malloc(n: int): pointer {.importc, header: "<stdlib.h>".}
