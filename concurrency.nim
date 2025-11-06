@@ -6,6 +6,7 @@ const FALLBACK_SLEEP_DELAY = 0.01#10us The delay between checking for changes wh
 #Enable experimental features that are used
 {.experimental: "codeReordering".}
 
+
 const gcUsed = querySetting(gc)
 when gcUsed == "arc" or gcUsed == "orc" or gcUsed == "none" or gcUsed == "atomicArc":
     const fallBackThreading = false

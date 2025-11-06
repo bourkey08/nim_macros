@@ -5,29 +5,24 @@ when not declared(with):
     include "./num_utils.nim"
     include "./binaryops.nim"
     include "./utils.nim"
-    include "./str_utils.nim"    
+    include "./str_utils.nim"
+    include "./seq_utils.nim"
     include "./binaryunits.nim"
-    include "./memory.nim"
-    include "./static_strings.nim"
 
     when not defined(js):    
         include "./hashing.nim"   
 
         when defined(linux) or defined(macosx) or defined(windows):    
             include "./system.nim"    
-            include "./config.nim"            
-            include "./async_helpers.nim"
+            include "./config.nim"
 
         #Incldue the arduino specific functions only when the arduino flag is set
         when declared(arduino):
             include "./arduino/arduino.nim"
 
-        when not defined(standalone) and defined(Thread):
-            include "./threads.nim"
+        when not defined(standalone):
             when not declared(AsyncCond):
-                import "./concurrency.nim"       
-
-    include "./seq_utils.nim" 
+                import "./concurrency.nim"
 
     #The standard library time functions dont work properly on 8bit microcontrollers, i havent tested them on 16bit but expect this to fail as well due to assumption that int can be used to store an i32
     when sizeof(int) >= 4:
@@ -41,8 +36,4 @@ when not declared(with):
 
 when defined(simd):
     when defined(release):
-        {.passC: "-march=native -O3 -mtune=native -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2
-
-when defined(small):
-    when defined(release):
-        {.passC: "-march=native -Os -mtune=native".}
+        {.passC: "-march=native -O3 -mtune=intel -msse4.2 -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2
