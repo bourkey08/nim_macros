@@ -223,3 +223,8 @@ macro islower(val: string): bool =
                 result = false
                 break
         result
+
+
+macro `*`(s: string, multi: int): untyped =
+    result = quote do:
+        `s`.repeat(`multi`)

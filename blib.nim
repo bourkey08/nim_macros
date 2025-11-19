@@ -36,7 +36,7 @@ when not declared(with):
 
 when defined(simd):
     when defined(release):
-        {.passC: "-march=native -O3 -mtune=native -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2
+        {.passC: "-march=native -O3 -mtune=native -fopenmp -mavx2 -msse4 -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2
 
 when defined(small):
     when defined(release):
