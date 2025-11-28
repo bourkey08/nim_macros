@@ -24,7 +24,8 @@ when not declared(with):
         when not defined(standalone):
             when not declared(AsyncCond):
                 import "./concurrency.nim"
-            include "./parallel_utils.nim"
+            when defined(threads):
+                include "./parallel_utils.nim"
 
     #The standard library time functions dont work properly on 8bit microcontrollers, i havent tested them on 16bit but expect this to fail as well due to assumption that int can be used to store an i32
     when sizeof(int) >= 4:
