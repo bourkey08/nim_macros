@@ -122,5 +122,8 @@ macro psizeof*(t: typedesc): untyped =
     let ty = t.getType()
 
     result = quote do:
-        let obj = create(`ty`)
-        sizeof (obj[][])
+        when compiles(create(`ty`)[][]):
+            let obj = create(`ty`)
+            sizeof (obj[][])
+        else:
+            sizeof (`t`)
