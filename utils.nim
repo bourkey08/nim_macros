@@ -113,6 +113,17 @@ macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
             resp = `falseVal`
         resp
 
+#C like ternary operator with 2 branches
+macro `?`(cond: bool, body: varargs[untyped]): untyped =   
+    if body.len != 2:
+        throw "The ternary operator requires exactly two branches"
+
+    let left = body[0]
+    let right = body[1]
+
+    result = quote do: 
+        tern(`cond`, `left`, `right`)
+
 #Behaves like the python pass keyword (does nothing)
 template pass(): untyped =
     discard 1

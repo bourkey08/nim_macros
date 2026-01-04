@@ -9,6 +9,7 @@ when not declared(with):
     include "./seq_utils.nim"
     include "./binaryunits.nim"
     include "./memory.nim"
+    include "./debug_tools.nim"
 
     when not defined(js):    
         include "./hashing.nim"   
