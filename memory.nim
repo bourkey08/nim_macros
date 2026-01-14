@@ -20,3 +20,8 @@ macro destructor(t: typedesc, body: untyped): untyped =
         result = quote do:
             proc `=destroy`(`x`: var `t`) =
                 `body`
+
+
+macro `+`(a: pointer, b: int): pointer =
+    result = quote do:
+        cast[pointer](cast[int](`a`) + `b`)
