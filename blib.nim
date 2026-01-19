@@ -10,10 +10,11 @@ when not declared(with):
     include "./binaryunits.nim"
     include "./memory.nim"
     include "./debug_tools.nim"
-    include "./network.nim"
+    include "./network.nim"       
+    include "./benchmark.nim"
 
     when not defined(js):    
-        include "./hashing.nim"   
+        include "./hashing.nim"
 
         when defined(linux) or defined(macosx) or defined(windows):    
             include "./system.nim"    

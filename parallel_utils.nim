@@ -132,3 +132,74 @@ macro pFor(i: untyped, rnge: untyped, body: untyped): untyped =
         #Loop is done, free the lock and cond
         `jobDoneLock`.deinitLock()
         `jobDoneCond`.deinitCond()
+
+macro pMap(data: untyped, body: untyped) : untyped =
+    bPoolFuncCounter.inc()
+    result = newStmtList()
+
+    #Ensure the thread pool is initialized
+    result.add quote do:
+        initBPool()
+
+    #Split the data into the variable and data seq
+    echo treeRepr(data)
+
+    if data[0].kind != nnkIdent or data[0].strVal != "in":
+        raise newException(ValueError, "parallelUtils.nim pMap macro expects 'entry in data' syntax")
+
+    #Split out the loop variables and data sequence
+    let loopVar = newIdentNode($data[1])
+    let dataSeq = data[2]
+
+    #Intialize counter and cond needed to track job completion efficently
+    let poolName = newIdentNode("bThreadPoolGInst")
+    let jobDoneCounter = newIdentNode("jobDoneCounter_" & $bPoolFuncCounter.value)
+    let jobDoneLock = newIdentNode("jobDoneLock_" & $bPoolFuncCounter.value)
+    let jobDoneCond = newIdentNode("jobDoneCond_" & $bPoolFuncCounter.value)    
+
+    #Create a counter to track the number of threads/jobs done
+    result.add quote do:
+        var `jobDoneLock`: Lock
+        `jobDoneLock`.initLock()
+        var `jobDoneCond`: Cond
+        `jobDoneCond`.initCond()
+
+        var `jobDoneCounter`: Atomic[int]
+        `jobDoneCounter`.store(0)
+
+    #Add a method for the body of the loop
+    var bodyIndent = newIdentNode("body_" & $bPoolFuncCounter.value)
+    var bodyArgIdent = newIdentNode("index")
+    var outDataIdent = newIdentNode("outputData_" & $bPoolFuncCounter.value)
+
+    #Generate the setup code for the output data
+    result.add quote do:
+        #Define the loop variable with the correct type and the output data seq
+        var `loopVar`: typeof(`dataSeq`[0])
+        var `outDataIdent` = newSeq[type(`body`)](`dataSeq`.len)
+
+    #Add the body method that is called by each loop job
+    result.add quote do:
+        proc `bodyIndent`(`bodyArgIdent`: int) : auto =
+            let `loopVar` = `dataSeq`[`bodyArgIdent`]
+            gcSafe:
+                let resp = `body`
+                `outDataIdent`[`bodyArgIdent`] = resp
+                if `jobDoneCounter`.fetchAdd(1) >= (`dataSeq`.len - 1):  #Last job to finish
+                    `jobDoneCond`.broadcast()
+
+    #Now generate the code to dispatch jobs for each entry in the data seq
+    result.add quote do:
+        for idx in 0..<`dataSeq`.len:
+            var jobEntry: tuple[f: proc(index: int), i: int] = (`bodyIndent`, idx)
+            `poolName`.chann.send(jobEntry)
+
+        #Finally wait for all jobs to complete
+        `jobDoneCond`.wait(`jobDoneLock`)
+
+        #Loop is done, free the lock and cond
+        `jobDoneLock`.deinitLock()
+        `jobDoneCond`.deinitCond()   
+
+        #Return the output data seq
+        `outDataIdent`
