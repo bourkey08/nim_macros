@@ -64,9 +64,8 @@ func parseBinaryUnits(text: string, retBits: static[bool]=false): int {.inline.}
 
     return multiplier * parseInt(intstr)
 
-
 #Takes a value in bytes and returns it formatted as a string with the appropriate unit
-proc formatBinaryUnits(value: int, places: int = 2): string {.inline.} =
+func formatBinaryUnits(value: int, places: int = 2): string {.inline.} =
     #First lets work out the units to use and divide out the value as we go
     var unit: string = "B"
     var val= float64(value)
@@ -106,3 +105,7 @@ proc formatBinaryUnits(value: int, places: int = 2): string {.inline.} =
 
     #And return the value with the unit
     return resp & " " & unit
+
+#Add an alias to make it cleaner when embedding binary units
+template bUnit(val: string): untyped = 
+    parseBinaryUnits(val)

@@ -1,6 +1,6 @@
 #Implements standard utility functions and macros (with, log, swap, toString ect)
 #Set this variable to toggle debug mode
-import macros
+import std/[macros]
 
 when not defined(standalone):
     import os
@@ -127,6 +127,19 @@ macro `?`(cond: bool, body: varargs[untyped]): untyped =
 #Behaves like the python pass keyword (does nothing)
 template pass(): untyped =
     discard 1
+
+#Macro to define variables that should have there value inlined (but cant be constants)
+macro def(x: untyped) =
+    result = newStmtList()
+
+    #Split the input into ident and val
+    if x[0].kind != nnkIdent:
+        raise newException(ValueError, "Identifier expected")
+    let ident = x[0]
+    let val = x[1]
+    result.add quote do:
+        template `ident`(): untyped =
+            `val`
 
 #Macro to get the size of a pointer type object at compile time
 macro psizeof*(t: typedesc): untyped =
