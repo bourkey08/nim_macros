@@ -13,6 +13,9 @@ when not declared(with):
     include "./network.nim"       
     include "./benchmark.nim"
 
+    when declared(async):
+        include "./async_helpers.nim"
+
     when not defined(js):    
         include "./hashing.nim"
 
