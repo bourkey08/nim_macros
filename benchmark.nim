@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                    Implements macros to assist in benchmarking code 
 #------------------------------------------------------------------------------------------------------------------------------------------------------
-import std/[macrocache]
+import std/[macrocache, times, monotimes]
 
 #Toggle to allow benchmarks to be enabled/disabled
 const ENABLE_BENCHMARKS {.booldefine: "bench".} = false
@@ -60,6 +60,11 @@ when not defined(benchmark):
 
                 echo "    Total: ", runtime.float64 / 1000.0, " ms"
                 echo "    Avg Per: ", runtime.float64 / `iters`.float64, " us\n"
+
+            #Finally wrap the whole thing in a block to avoid name conflicts
+            result = quote do:
+                block:
+                    `result`
 
     #Wrapper to allow benchmarks without titles
     macro benchmark(iters: int, body: untyped): untyped =
