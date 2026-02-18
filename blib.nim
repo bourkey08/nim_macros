@@ -12,6 +12,7 @@ when not declared(with):
     include "./debug_tools.nim"
     include "./network.nim"       
     include "./benchmark.nim"
+    include "./options.nim"
 
     when declared(async):
         include "./async_helpers.nim"

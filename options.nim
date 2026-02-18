@@ -1,0 +1,28 @@
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+#                                    Implements a simplified option type that outpreforms the built in std/options type
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Option type, has sets if the value is present, val is undefined if has is false and should not be accessed
+type Opt[T] = tuple[
+    has: bool,
+    val: T
+]
+
+#Define templates for the standard option operations to allow this to be a drop in replacement for the std/options type
+template isSome[T](self: Opt[T]): bool =
+    self.has
+
+template isNone[T](self: Opt[T]): bool =
+    not self.has
+
+template get[T](self: Opt[T]): T =
+    if not self.has:
+        raise newException(ValueError, "Option value is not set")
+    self.val
+    
+#As these methods have the same name and calling pattern as the std/options type they are renamed to some = som and none = non to avoid conflicts
+template som[T](val: T): untyped =
+    (true, val)
+
+template non[T](): untyped =
+    (false, default(T))    
