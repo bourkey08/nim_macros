@@ -6,10 +6,17 @@ func parseBinaryUnits(text: string, retBits: static[bool]=false): int {.inline.}
     var intchars: seq[char] = @[]
     var unitchars: seq[char] = @[]
 
+    var firstDot = false
     for i in text:
         if i.isdigit:
             intchars.add i
 
+        elif i == '.':
+            if firstDot:
+                raise newException(ValueError, "Invalid format for binary unit value, multiple decimal points found")
+            else:
+                firstDot = true
+                intchars.add i
         else:
             unitchars.add i
 
@@ -62,10 +69,17 @@ func parseBinaryUnits(text: string, retBits: static[bool]=false): int {.inline.}
     when retBits:
         multiplier * 8
 
-    return multiplier * parseInt(intstr)
+    #If the value is a float then case everything to float and then back to it after the multiplication to allow for fractional values
+    if firstDot:
+        return int(multiplier.float64 * parseFloat(intstr))
+    else:
+        return multiplier * parseInt(intstr)
 
 #Takes a value in bytes and returns it formatted as a string with the appropriate unit
-func formatBinaryUnits(value: int, places: int = 2): string {.inline.} =
+func formatBinaryUnits(value: auto, places: int = 2): string {.inline.} =
+    if value == 0:
+        return "0 B"
+
     #First lets work out the units to use and divide out the value as we go
     var unit: string = "B"
     var val= float64(value)
@@ -98,11 +112,11 @@ func formatBinaryUnits(value: int, places: int = 2): string {.inline.} =
 
     #Now format the value to the required number of decimal places
     var resp = $val
-    if places > 0:
-        resp = resp.split(".")[0] & "." & resp.split(".")[1][0..<places]
+    let split = resp.split(".")
+    if places > 0 and split.len > 1:
+        resp = split[0] & "." & split[1][0..<min(places, split[1].len)]
     else:
-        resp = resp.split(".")[0]
-
+        resp = split[0]
     #And return the value with the unit
     return resp & " " & unit
 
