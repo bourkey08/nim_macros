@@ -6,6 +6,9 @@ func parseBinaryUnits(text: string, retBits: static[bool]=false): int {.inline.}
     var intchars: seq[char] = @[]
     var unitchars: seq[char] = @[]
 
+    if text == "" or text == "0":
+        return 0
+
     var firstDot = false
     for i in text:
         if i.isdigit:
