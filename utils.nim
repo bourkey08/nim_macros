@@ -151,3 +151,20 @@ macro psizeof*(t: typedesc): untyped =
             sizeof (obj[][])
         else:
             sizeof (`t`)
+
+
+#Takes a look in the format expandLoop ident, {seq of values} and applys the body to each value in the seq
+macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
+    result = newStmtList()
+
+    if v.kind != nnkIdent:
+        raise newException(ValueError, "First argument to expandLoop must be an identifier")
+
+    if rng.kind != nnkCurly:
+        raise newException(ValueError, "Second argument to expandLoop must be a bracket expression")
+    
+    for child in rng:
+        result.add quote do:
+            block:
+                let `v` = `child`
+                `body`
