@@ -3,6 +3,8 @@
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 import std/[asyncdispatch]
 
+include "./subprocess/subprocess.nim"#Implements functionality for launching subprocesses and handling their output asynchronously
+
 template isAsync(): untyped = 
     when compiles(await sleepAsync(0)):
         true
