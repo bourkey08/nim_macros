@@ -12,12 +12,21 @@ type SubProcStream = tuple[exitCode: Future[int], stdOut: FutureStream[string], 
 #Called to run a sub process with the provided command and working directory and capture the output
 #This accumulates all output in memory before returning
 #   - this is suitable for most use cases but if you need to process the output as it comes in then use the runSubProcStream function instead    
-proc runSubProc(cmd: string, workingDir: string=""): Future[SubProcResult] {.async.} =
-    let subProc = osproc.startProcess(
-        cmd,
-        workingDir=workingDir,
-        options={poUsePath, poEvalCommand}
-    )
+proc runSubProc(cmd: string, workingDir: string="", args: seq[string] = @[]): Future[SubProcResult] {.async.} =
+    var subProc: Process
+    if args.len > 0:
+        subProc = osproc.startProcess(
+            cmd,
+            args=args,
+            workingDir=workingDir,
+            options={poUsePath}
+        )
+    else:
+        subProc = osproc.startProcess(
+            cmd,
+            workingDir=workingDir,
+            options={poUsePath, poEvalCommand}
+        )
 
     #Now async await the process to complete and then read the output code from the temp file
     var stdOutBuffer: seq[string] = @[]
@@ -53,15 +62,25 @@ proc runSubProc(cmd: string, workingDir: string=""): Future[SubProcResult] {.asy
 
 #Runs a sub process and returns the stdout and stderr as async streams that can be processed as the output is produced,
 #  - suitable for long running processes or processes that produce large output
-proc runSubProcStream(cmd: string, workingDir: string=""): SubProcStream = 
+proc runSubProcStream(cmd: string, workingDir: string="", args: seq[string] = @[]): SubProcStream = 
     #Define an async function that handles actually running the subprocess and capturing output
     #  - This needs to keep running after the function returns to continue capturing output
     proc procRunnerWrapper(cmd: string, workingDir: string, stdOutStream: FutureStream[string], stdErrStream: FutureStream[string], exitCodeFuture: Future[int]) {.async.} =
-        let subProc = osproc.startProcess(
-            cmd,
-            workingDir=workingDir,
-            options={poUsePath, poEvalCommand}
-        )
+        var subProc: Process
+        if args.len > 0:
+            subProc = osproc.startProcess(
+                cmd,
+                args=args,
+                workingDir=workingDir,
+                options={poUsePath}
+            )
+
+        else:
+            subProc = osproc.startProcess(
+                cmd,
+                workingDir=workingDir,
+                options={poUsePath, poEvalCommand}
+            )
 
         #Get the sync streams from the subprocess and convert them to async streams
         var errStream = subProc.peekableErrorStream()
