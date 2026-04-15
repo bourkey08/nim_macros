@@ -1,15 +1,6 @@
 #------------------------------------------------------------------------------------------------------------------------------------------------------
-#                                                Defines Misc helper functions for async operations/Futures
+#                                Defines a trigger that can be used to allow 1 async process to wake up/trigger another
 #------------------------------------------------------------------------------------------------------------------------------------------------------
-import std/[asyncdispatch]
-
-include "./subprocess/subprocess.nim"#Implements functionality for launching subprocesses and handling their output asynchronously
-
-template isAsync(): untyped = 
-    when compiles(await sleepAsync(0)):
-        true
-    else:
-        false
 
 #Defines a type for a generic object for an auto resetting async trigger
 type AsyncTrigger = ref object

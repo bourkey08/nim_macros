@@ -16,7 +16,7 @@ when not declared(with):
     include "./static_strings.nim"
 
     when declared(async):
-        include "./async_helpers.nim"
+        include "./async_helpers/async_helpers.nim"
 
     when not defined(js):    
         include "./hashing.nim"
