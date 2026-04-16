@@ -21,6 +21,9 @@ proc newAsyncLimiter(limit: int): AsyncLimiter =
     )
 
 proc start(self: AsyncLimiter, timeout: int = 0): Future[bool] {.async.} =
+    if self.limit == 0:
+        return true#If the limit is 0 then there is no limit, so just return immediately
+
     if timeout != 0:
         let timeoutFut = sleepAsync(timeout)#Future that resolves when the timeout is reached
 
@@ -40,6 +43,9 @@ proc start(self: AsyncLimiter, timeout: int = 0): Future[bool] {.async.} =
     return true
 
 proc finish(self: AsyncLimiter) {.inline.} =
+    if self.limit == 0:
+        return#If the limit is 0 then there is no limit, so just return immediately
+
     if self.count > 0:
         self.count -= 1
 
@@ -54,6 +60,9 @@ proc reset(self: AsyncLimiter) =
 
 #------------------------------------ Defines methods for the acquire/release pattern ------------------------------------
 proc release(self: AsyncLimiterLock) =
+    if self.limiter.limit == 0:
+        return#If the limit is 0 then there is no limit, so just return immediately
+
     if self.held:
         self.held = false
         if self.limiter.count == 0:
@@ -66,9 +75,14 @@ proc release(self: AsyncLimiterLock) =
 
 #Aquire a lock for the async limiter, returns a lock object with a release method
 proc acquire(self: AsyncLimiter): Future[AsyncLimiterLock] {.async.} =
-    while self.count >= self.limit:
-        await self.trig.wait()
 
-    self.count += 1
+    if self.limit == 0:
+        return AsyncLimiterLock(limiter: self)#
     
-    return AsyncLimiterLock(limiter: self)
+    else:
+        while self.count >= self.limit:
+            await self.trig.wait()
+
+        self.count += 1
+        
+        return AsyncLimiterLock(limiter: self)
