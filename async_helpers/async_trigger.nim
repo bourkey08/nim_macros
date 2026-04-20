@@ -63,3 +63,5 @@ proc wait(self: AsyncTrigger): Future[void] {.async.} =
             self.futSet = false
 
         await self.fut
+
+        
