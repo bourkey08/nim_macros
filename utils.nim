@@ -166,5 +166,5 @@ macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
     for child in rng:
         result.add quote do:
             block:
-                let `v` = `child`
+                var `v` = `child`
                 `body`
