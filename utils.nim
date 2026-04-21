@@ -168,3 +168,4 @@ macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
             block:
                 var `v` = `child`
                 `body`
+                `child` = `v`
