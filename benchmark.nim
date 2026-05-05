@@ -78,3 +78,28 @@ when not defined(benchmark):
         result = quote do:
             miscBench(`benchIdx`, `iters`, `body`)            
                 
+#Defines a simple macro for timing a block of code without affecting its function or scope
+#Arguments (all optional):
+#   title: A string to identify the benchmark in the output, defaults to "Benchmark"
+#   iters: The number of iterations to run the code block for, defaults to 1
+#   units: The units to display the results in, can be "m|ms" for milliseconds or "u|us" for microseconds, defaults to "ms"
+
+macro timeIt(body: untyped): untyped =
+    result = newStmtList()
+
+    result.add quote do:
+        let start = getMonoTime()
+
+        `body`
+
+        let finish = getMonoTime()
+
+        let runtime = inMilliseconds(finish - start)
+
+        if runtime < 10:
+            let rtUs = inMicroseconds(finish - start)
+            echo "Benchmark: " &  $rtUs & " us"
+        else:
+            let rtMs = runtime.float64
+
+            echo "Benchmark: " &  $rtMs & " ms"
