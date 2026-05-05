@@ -51,7 +51,7 @@ macro initBPool(count: static int = 0): untyped =
             raise newException(ValueError, "parallelUtils.nim requires orc or arc memory manager to be enabled")
 
         #This needs to be at runtime so we get the correct number of processors
-        let tCount = tern(`count` == 0, countProcessors(), `count`)
+        let tCount = tern(`count` == 0, cpuinfo.countProcessors(), `count`)
 
         #Create a globally scoped thread pool
         `poolName` = newBThreadPool(tCount)
