@@ -123,7 +123,6 @@ macro pFor(i: untyped, rnge: untyped, body: untyped): untyped =
             result.add quote do:
                 var jobEntry: tuple[f: proc(index: int), i: int] = (`bodyIndent`, `idx`)
                 `poolName`.chann.send(jobEntry)
-    
 
     #Finally wait for all jobs to complete
     result.add quote do:
@@ -140,9 +139,6 @@ macro pMap(data: untyped, body: untyped) : untyped =
     #Ensure the thread pool is initialized
     result.add quote do:
         initBPool()
-
-    #Split the data into the variable and data seq
-    echo treeRepr(data)
 
     if data[0].kind != nnkIdent or data[0].strVal != "in":
         raise newException(ValueError, "parallelUtils.nim pMap macro expects 'entry in data' syntax")
@@ -203,3 +199,76 @@ macro pMap(data: untyped, body: untyped) : untyped =
 
         #Return the output data seq
         `outDataIdent`
+
+#Implements a parallel loop that does not have a return
+macro pExp(v: untyped, rnge: untyped, body: untyped): untyped =
+    bPoolFuncCounter.inc()
+    bPoolFuncCounter.inc()
+    result = newStmtList()
+
+    # Parse the range expression (e.g., 0..12)
+    var start, finish: int
+    var loopKind: int = 0
+
+    #Assumes range is of the form a..b
+    if rnge[1].kind == nnkIntLit and rnge[2].kind == nnkIntLit:
+        #Both are int literals
+        start = rnge[1].intVal.int
+        finish = rnge[2].intVal.int
+        loopKind = tern($rnge[0].repr == "..", 0, 1)
+    else:
+        raise newException(ValueError, "parallelUtils.nim pFor macro only supports int literal ranges at compile time")
+
+    #Ensure the thread pool is initialized
+    result.add quote do:
+        initBPool()
+
+    #Intialize counter and cond needed to track job completion efficently
+    let poolName = newIdentNode("bThreadPoolGInst")
+    let jobDoneCounter = newIdentNode("jobDoneCounter_" & $bPoolFuncCounter.value)
+    let jobDoneLock = newIdentNode("jobDoneLock_" & $bPoolFuncCounter.value)
+    let jobDoneCond = newIdentNode("jobDoneCond_" & $bPoolFuncCounter.value)    
+
+    #Create a counter to track the number of threads/jobs done
+    result.add quote do:
+        var `jobDoneLock`: Lock
+        `jobDoneLock`.initLock()
+        var `jobDoneCond`: Cond
+        `jobDoneCond`.initCond()
+
+        var `jobDoneCounter`: Atomic[int]
+        `jobDoneCounter`.store(0)
+
+    #Add a method for the body of the loop
+    var bodyIndent = newIdentNode("body_" & $bPoolFuncCounter.value)
+
+    result.add quote do:
+        proc `bodyIndent`(`v`: int) =
+            gcSafe:
+                `body`
+                if `loopKind` == 0:
+                    if `jobDoneCounter`.fetchAdd(1) >= (`finish` - `start`):  #Last job to finish
+                        `jobDoneCond`.broadcast()
+                else:
+                    if `jobDoneCounter`.fetchAdd(1) + 1 >= (`finish` - `start`):  #Last job to finish
+                        `jobDoneCond`.broadcast()
+    
+    #Now generate the loop code  
+    if loopKind == 0:
+        for idx in `start`..`finish`:
+            result.add quote do:
+                var jobEntry: tuple[f: proc(index: int), i: int] = (`bodyIndent`, `idx`)
+                `poolName`.chann.send(jobEntry)
+    else:
+        for idx in `start`..<`finish`:
+            result.add quote do:
+                var jobEntry: tuple[f: proc(index: int), i: int] = (`bodyIndent`, `idx`)
+                `poolName`.chann.send(jobEntry)
+
+    #Finally wait for all jobs to complete
+    result.add quote do:
+        `jobDoneCond`.wait(`jobDoneLock`)
+
+        #Loop is done, free the lock and cond
+        `jobDoneLock`.deinitLock()
+        `jobDoneCond`.deinitCond()
