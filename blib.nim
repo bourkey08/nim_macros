@@ -9,17 +9,17 @@ when not declared(with):
     include "./seq_utils.nim"
     include "./binaryunits.nim"
     include "./memory.nim"
-    include "./debug_tools.nim"
-    include "./network.nim"       
+    include "./debug_tools.nim"     
     include "./benchmark.nim"
     include "./options.nim"
     include "./static_strings.nim"
 
     when declared(async):
-        include "./async_helpers.nim"
+        include "./async_helpers/async_helpers.nim"
 
-    when not defined(js):    
-        include "./hashing.nim"
+    when not defined(js):  
+        include "./hashing.nim"   
+        include "./network.nim"  
 
         when defined(linux) or defined(macosx) or defined(windows):    
             include "./system.nim"    
@@ -47,4 +47,4 @@ when not declared(with):
 
 when defined(simd):
     when defined(release):
-        {.passC: "-march=native -O3 -mtune=intel -msse4.2 -ftree-vectorize -fopt-info-vec -fno-strict-aliasing".}#-msse4.2
+        {.passC: "-march=native -O3 -mtune=native -ftree-slp-vectorize -ftree-vectorize -fno-strict-aliasing".}#-msse4.2 -fopt-info-vec
