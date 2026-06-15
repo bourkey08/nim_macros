@@ -102,7 +102,6 @@ template swap(x: untyped, y: untyped): untyped =
 template throw(msg: string): untyped = 
     raise newException(Exception, msg)
 
-
 #Define a c style ternary operator, we cant use ? : in nim so we have to implement our own
 macro `tern`(cond: typed, trueVal: typed, falseVal: typed): untyped =
     quote do:
@@ -165,7 +164,19 @@ macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
     
     for child in rng:
         result.add quote do:
-            block:
-                var `v` = `child`
-                `body`
-                `child` = `v`
+            #This is a hack to allow expanding loops that both modify the child variables and those where the child variables are immutable
+            when compiles(
+                block:
+                    var `v` = `child`
+                    `body`
+                    `child` = `v`
+            ):
+                block:
+                    var `v` = `child`
+                    `body`                
+                    `child` = `v`
+
+            else:
+                block:
+                    let `v` = `child`
+                    `body`
