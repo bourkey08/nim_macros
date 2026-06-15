@@ -2,6 +2,7 @@
 #                                    Implements a simplified option type that outpreforms the built in std/options type
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
+#------------------------------------------ Optional type ------------------------------------------
 #Option type, has sets if the value is present, val is undefined if has is false and should not be accessed
 type Opt[T] = tuple[
     has: bool,
@@ -26,3 +27,30 @@ template som[T](val: T): untyped =
 
 template non[T](): untyped =
     (false, default(T))    
+
+
+#--------------------------- Optional type with error message on failure ---------------------------
+type OptE[T] = tuple[
+    has: bool,
+    val: T,
+    eMsg: string,
+    eCode: uint32
+]
+
+template isSome[T](self: OptE[T]): bool =
+    self.has 
+
+
+template isNone[T](self: OptE[T]): bool =
+    not self.has
+
+template get[T](self: OptE[T]): T =
+    if not self.has:
+        raise newException(ValueError, "Option value is not set, error code: " & $self.eCode & ", error message: " & self.eMsg)
+    self.val
+
+template som[T](val: T): untyped =
+    (true, val, "", 0)#Need to set the unused fields as its a tuple
+
+template non[T](eCode: uint32, eMsg: string): untyped =
+    (false, default(T), eMsg, eCode)
