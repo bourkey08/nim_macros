@@ -49,8 +49,8 @@ template get[T](self: OptE[T]): T =
         raise newException(ValueError, "Option value is not set, error code: " & $self.eCode & ", error message: " & self.eMsg)
     self.val
 
-template som[T](val: T): untyped =
+template somE[T](val: T): untyped =
     (true, val, "", 0)#Need to set the unused fields as its a tuple
 
-template non[T](eCode: uint32, eMsg: string): untyped =
+template nonE[T](eCode: uint32, eMsg: string): untyped =
     (false, default(T), eMsg, eCode)
