@@ -40,7 +40,6 @@ type OptE[T] = tuple[
 template isSome[T](self: OptE[T]): bool =
     self.has 
 
-
 template isNone[T](self: OptE[T]): bool =
     not self.has
 
@@ -48,6 +47,11 @@ template get[T](self: OptE[T]): T =
     if not self.has:
         raise newException(ValueError, "Option value is not set, error code: " & $self.eCode & ", error message: " & self.eMsg)
     self.val
+
+template getErr[T](self: OptE[T]): tuple[eMsg: string, eCode: uint32] =
+    if self.has:
+        raise newException(ValueError, "Option value is set, no error to get")
+    (self.eMsg, self.eCode)
 
 template respSuccess[T](val: T): untyped =
     (true, val, "", 0)#Need to set the unused fields as its a tuple
