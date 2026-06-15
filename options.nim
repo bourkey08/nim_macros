@@ -48,7 +48,7 @@ template get[T](self: OptE[T]): T =
         raise newException(ValueError, "Option value is not set, error code: " & $self.eCode & ", error message: " & self.eMsg)
     self.val
 
-template getErr[T](self: OptE[T]): tuple[eMsg: string, eCode: uint32] =
+template getErr[T](self: OptE[T]): untyped =
     if self.has:
         raise newException(ValueError, "Option value is set, no error to get")
     (self.eCode, self.eMsg)
