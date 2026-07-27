@@ -84,28 +84,28 @@ func u8(fhash: FHash): uint8 {.inline} =
 
 func u16(fhash: FHash): uint16 {.inline} =
     return bitxor(
-        (uint16(fhash[0]) << 8),
+        (uint16(fhash[0]) shl 8),
         (uint16(fhash[1]))
     )
     
 
 func u32(fhash: FHash): uint32 {.inline} =
     return bitxor(
-        (uint32(fhash[0]) << 24),
-        (uint32(fhash[1]) << 16),
-        (uint32(fhash[2]) << 8),
+        (uint32(fhash[0]) shl 24),
+        (uint32(fhash[1]) shl 16),
+        (uint32(fhash[2]) shl 8),
         (uint32(fhash[3]))
     )
 
 func u64(fhash: FHash): uint64 {.inline.} =
     return bitxor(
-        uint64(fhash[0]) << 56,
-        uint64(fhash[1]) << 48,
-        uint64(fhash[2]) << 40,
-        uint64(fhash[3]) << 32,
-        uint64(fhash[4]) << 24,
-        uint64(fhash[5]) << 16,
-        uint64(fhash[6]) << 8,
+        uint64(fhash[0]) shl 56,
+        uint64(fhash[1]) shl 48,
+        uint64(fhash[2]) shl 40,
+        uint64(fhash[3]) shl 32,
+        uint64(fhash[4]) shl 24,
+        uint64(fhash[5]) shl 16,
+        uint64(fhash[6]) shl 8,
         uint64(fhash[7])
     )   
 
@@ -144,58 +144,58 @@ func u8x8(fhash: FHash): array[8, uint8] {.inline.} =
 
 func u16x8(fhash: FHash): array[8, uint16] {.inline.} =
     return [
-        bitxor(uint16(fhash[0]) << 8, uint16(fhash[1])),
-        bitxor(uint16(fhash[2]) << 8, uint16(fhash[3])),
-        bitxor(uint16(fhash[4]) << 8, uint16(fhash[5])),
-        bitxor(uint16(fhash[6]) << 8, uint16(fhash[7])),
-        bitxor(uint16(fhash[8]) << 8, uint16(fhash[9])),
-        bitxor(uint16(fhash[10]) << 8, uint16(fhash[11])),
-        bitxor(uint16(fhash[12]) << 8, uint16(fhash[13])),
-        bitxor(uint16(fhash[14]) << 8, uint16(fhash[15])),
+        bitxor(uint16(fhash[0]) shl 8, uint16(fhash[1])),
+        bitxor(uint16(fhash[2]) shl 8, uint16(fhash[3])),
+        bitxor(uint16(fhash[4]) shl 8, uint16(fhash[5])),
+        bitxor(uint16(fhash[6]) shl 8, uint16(fhash[7])),
+        bitxor(uint16(fhash[8]) shl 8, uint16(fhash[9])),
+        bitxor(uint16(fhash[10]) shl 8, uint16(fhash[11])),
+        bitxor(uint16(fhash[12]) shl 8, uint16(fhash[13])),
+        bitxor(uint16(fhash[14]) shl 8, uint16(fhash[15])),
     ]
 
 func u16x4(fhash: FHash): array[4, uint16] {.inline.} =
     return [
-        bitxor(uint16(fhash[0]) << 8, uint16(fhash[1])),
-        bitxor(uint16(fhash[2]) << 8, uint16(fhash[3])),
-        bitxor(uint16(fhash[4]) << 8, uint16(fhash[5])),
-        bitxor(uint16(fhash[6]) << 8, uint16(fhash[7]))
+        bitxor(uint16(fhash[0]) shl 8, uint16(fhash[1])),
+        bitxor(uint16(fhash[2]) shl 8, uint16(fhash[3])),
+        bitxor(uint16(fhash[4]) shl 8, uint16(fhash[5])),
+        bitxor(uint16(fhash[6]) shl 8, uint16(fhash[7]))
     ]
 
 func u32x4(fhash: FHash): array[4, uint32] {.inline.} =
     return [
-        bitxor(uint32(fhash[0]) << 24, uint32(fhash[1]) << 16, uint32(fhash[2]) << 8, uint32(fhash[3])),
-        bitxor(uint32(fhash[4]) << 24, uint32(fhash[5]) << 16, uint32(fhash[6]) << 8, uint32(fhash[7])),
-        bitxor(uint32(fhash[8]) << 24, uint32(fhash[9]) << 16, uint32(fhash[10]) << 8, uint32(fhash[11])),
-        bitxor(uint32(fhash[12]) << 24, uint32(fhash[13]) << 16, uint32(fhash[14]) << 8, uint32(fhash[15]))
+        bitxor(uint32(fhash[0]) shl 24, uint32(fhash[1]) shl 16, uint32(fhash[2]) shl 8, uint32(fhash[3])),
+        bitxor(uint32(fhash[4]) shl 24, uint32(fhash[5]) shl 16, uint32(fhash[6]) shl 8, uint32(fhash[7])),
+        bitxor(uint32(fhash[8]) shl 24, uint32(fhash[9]) shl 16, uint32(fhash[10]) shl 8, uint32(fhash[11])),
+        bitxor(uint32(fhash[12]) shl 24, uint32(fhash[13]) shl 16, uint32(fhash[14]) shl 8, uint32(fhash[15]))
     ]
 
 func u32x2(fhash: FHash): array[2, uint32] {.inline.} =
     return [
-        bitxor(uint32(fhash[0]) << 24, uint32(fhash[1]) << 16, uint32(fhash[2]) << 8, uint32(fhash[3])),
-        bitxor(uint32(fhash[4]) << 24, uint32(fhash[5]) << 16, uint32(fhash[6]) << 8, uint32(fhash[7]))
+        bitxor(uint32(fhash[0]) shl 24, uint32(fhash[1]) shl 16, uint32(fhash[2]) shl 8, uint32(fhash[3])),
+        bitxor(uint32(fhash[4]) shl 24, uint32(fhash[5]) shl 16, uint32(fhash[6]) shl 8, uint32(fhash[7]))
     ]
 
 func u64x2(fhash: FHash): array[2, uint64] {.inline.} =
     return [
         bitxor(
-            uint64(fhash[0]) << 56,
-            uint64(fhash[1]) << 48,
-            uint64(fhash[2]) << 40,
-            uint64(fhash[3]) << 32,
-            uint64(fhash[4]) << 24,
-            uint64(fhash[5]) << 16,
-            uint64(fhash[6]) << 8,
+            uint64(fhash[0]) shl 56,
+            uint64(fhash[1]) shl 48,
+            uint64(fhash[2]) shl 40,
+            uint64(fhash[3]) shl 32,
+            uint64(fhash[4]) shl 24,
+            uint64(fhash[5]) shl 16,
+            uint64(fhash[6]) shl 8,
             uint64(fhash[7])
         ),
         bitxor(
-            uint64(fhash[8]) << 56,
-            uint64(fhash[9]) << 48,
-            uint64(fhash[10]) << 40,
-            uint64(fhash[11]) << 32,
-            uint64(fhash[12]) << 24,
-            uint64(fhash[13]) << 16,
-            uint64(fhash[14]) << 8,
+            uint64(fhash[8]) shl 56,
+            uint64(fhash[9]) shl 48,
+            uint64(fhash[10]) shl 40,
+            uint64(fhash[11]) shl 32,
+            uint64(fhash[12]) shl 24,
+            uint64(fhash[13]) shl 16,
+            uint64(fhash[14]) shl 8,
             uint64(fhash[15])
         )
     ]
