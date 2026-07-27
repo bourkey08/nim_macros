@@ -29,7 +29,7 @@ template `rotateright`(x: untyped, y: untyped): untyped =
     else:
         raise ValueError("Invalid type for rotateleft")
 
-macro `shr>`(x, y: untyped): untyped =    
+macro `>>>`(x, y: untyped): untyped =    
     newCall(bindSym"rotateright", x, y)
 
 #Rotate left
@@ -55,15 +55,15 @@ template `rotateleft`(x: untyped, y: untyped): untyped =
     else:
         raise ValueError(Exception, "Invalid type for rotateleft")
 
-macro `shl<`(x, y: untyped): untyped =    
+macro `<<<`(x, y: untyped): untyped =    
     newCall(bindSym"rotateleft", x, y)
 
-macro `shl`(x, y: untyped): untyped =    
+macro `<<`(x, y: untyped): untyped =    
     #result = nnkInfix.newTree(newIdentNode("shl"), x, y)
     result = quote do:
         ((`x` shl `y`))
 
-macro `shr`(x, y: untyped): untyped =
+macro `>>`(x, y: untyped): untyped =
     #result = nnkInfix.newTree(newIdentNode("shr"), x, y)
     result = quote do:
         ((`x` shr `y`))
@@ -146,13 +146,13 @@ macro `|=`(x, y: untyped): untyped =
     result = quote do:
         `x` = `x` or `y`
 
-macro `shr=`(x, y: untyped): untyped =
+macro `>>=`(x, y: untyped): untyped =
     result = quote do:
-        `x` = ((`x` shr `y`))
+        `x` = ((`x` >> `y`))
 
-macro `shl=`(x, y: untyped): untyped =
+macro `<<=`(x, y: untyped): untyped =
     result = quote do:
-        `x` = ((`x` shl `y`))
+        `x` = ((`x` << `y`))
 
 macro `**=`(x, y: untyped): untyped =
     result = quote do:
@@ -185,3 +185,9 @@ macro `---`(x: untyped): untyped =
     result = quote do:
         `x` -= 1
         `x`
+
+#Define constants for modulo operations
+const mod64: uint64 = (uint64(2) ** uint64(64)) - 1
+const mod32: uint32 = (uint32(2) ** uint32(32)) - 1
+const mod16: uint16 = (uint16(2) ** uint16(16)) - 1
+const mod8: uint8 = (uint8(2) ** uint8(8)) - 1
