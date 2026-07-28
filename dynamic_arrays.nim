@@ -43,6 +43,19 @@ template `[]`*[T](self: dArray[T], index: int): T =
         raise newException(IndexError, "Index out of bounds")
     self.data[index]
 
+#Getter for slicing the dynamic array using a range
+template `[]`*[T](self: dArray[T], slice: HSlice[int, int]): seq[T] =
+    ## Returns a sequence containing the elements in the given range of the dynamic array
+    if slice.a < 0 or slice.b >= self.size:
+        raise newException(IndexError, "Slice out of bounds")
+
+    let length = slice.b - slice.a + 1
+    var resp = newSeq[T](length)
+
+    for i in 0..<length:
+        resp[i] = self.data[slice.a + i]
+    resp
+
 ## Sets the element at the given index in the array to the given value
 template `[]=`*[T](self: dArray[T], index: int, value: T) =
     if index < 0 or index >= self.size:
