@@ -3,79 +3,119 @@
 import checksums/[sha1, sha2]
 import std/bitops
 
+#Set a flag to indicate if nim crypto should be used or not, if false then the built in sha1/sha2 librarys will be used
+when declared(nimcrypto):
+    const USE_NIM_CRYPTO = true
+else:
+    const USE_NIM_CRYPTO = false
+
 #Define a type for the "fhash", this should always be used in place of array[20, byte] when using a hash as it allows it to be easily changed in the future
 type FHash = array[20, byte]
 type FHash2 = array[32, byte]#Used for 256bit hash type rather than the 160bit sha1 based hashes
 
 #Takes a string and calculates the hash returning it as a fhash (20 bytes) rather than a hex string
 func calcFHash(data: string): FHash {.inline.} =  
-    let resp = secureHash(data)
-    return cast[FHash](resp)
+    when USE_NIM_CRYPTO:
+        let resp = nimcrypto.sha1.digest(data)
+        return cast[FHash](resp)
+    else:
+        let resp = secureHash(data)
+        return cast[FHash](resp)
 
 #As above but for sequences of characters
-func calcFHash(data: openArray[char]): FHash {.inline.} =  
-    let resp = secureHash(data)
-    return cast[FHash](resp)
+func calcFHash(data: openArray[char]): FHash {.inline.} =
+    when USE_NIM_CRYPTO:
+        let resp = nimcrypto.sha1.digest(data)
+        return cast[FHash](resp)
+    else:
+        let resp = secureHash(data)
+        return cast[FHash](resp)
 
 #As above but for sequences of bytes
 #Note: This will be slower then the other 2 options as it requires copying the data to a sequence of characters
 #      Will rewrite this as a macro thats more efficient in the future
 func calcFHash[T](data: seq[T]): FHash {.inline.} =
-    #Convert the argument to a sequence of characters
-    var arry: seq[char]
-    for c in data:
-        arry.add(char(c))
-
-    let resp = secureHash(arry)
-    return cast[FHash](resp)
+    when USE_NIM_CRYPTO:
+        let resp = nimcrypto.sha1.digest(data)
+        return cast[FHash](resp)
+    else:
+        let resp = secureHash(data)
+        return cast[FHash](resp)
 
 
 #Takes a string and calculates the hash returning it as an fhash2(32bytes)
 proc calcFHash2(data: string): FHash2 {.inline.} =
-    #Create a blank sha512 state
-    var state = initSha_512()
-    
-    #Update it with the data
-    state.update(data)
+    when USE_NIM_CRYPTO:
+        #Calculate the sha512 hash of the data
+        let digest = nimcrypto.sha512.digest(data)
 
-    #Finalize the hash and return it as an a digest
-    let digest = state.digest()
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp = cast[ptr FHash2](addr digest)[]
 
-    #Cast this to a fhash2 dropping the remaining 32bytes
-    let resp =  cast[ptr FHash2](addr digest)[]
-    
-    return resp
+        return resp
+    else:
+        #Create a blank sha512 state
+        var state = initSha_512()
+
+        #Update it with the data
+        state.update(data)
+
+        #Finalize the hash and return it as an a digest
+        let digest = state.digest()
+
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp =  cast[ptr FHash2](addr digest)[]
+
+        return resp
 
 #As above but for sequences of characters
 proc calcFHash2(data: openArray[char]): FHash2 {.inline.} =
-    #Create a blank sha512 state
-    var state = initSha_512()
+    when USE_NIM_CRYPTO:
+        #Calculate the sha512 hash of the data
+        let digest = nimcrypto.sha512.digest(data)
 
-    #Update it with the data
-    state.update(data)
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp = cast[ptr FHash2](addr digest)[]
 
-    #Finalize the hash and return it as an a digest
-    let digest = state.digest()
+        return resp
+    else:
+        #Create a blank sha512 state
+        var state = initSha_512()
 
-    #Cast this to a fhash2 dropping the remaining 32bytes
-    let resp =  cast[ptr FHash2](addr digest)[]
-    
-    return resp
+        #Update it with the data
+        state.update(data)
+
+        #Finalize the hash and return it as an a digest
+        let digest = state.digest()
+
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp =  cast[ptr FHash2](addr digest)[]
+
+        return resp
 
 #As above but for sequences of bytes
 proc calcFHash2[T](data: seq[T]): FHash2 {.inline.} =
-    #Create a blank sha512 state
-    var state = initSha_512()
+    when USE_NIM_CRYPTO:
+        #Calculate the sha512 hash of the data
+        let digest = nimcrypto.sha512.digest(cast[seq[char]](data))
 
-    state.update(cast[seq[char]](data))
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp = cast[ptr FHash2](addr digest)[]
 
-    #Finalize the hash and return it as an a digest
-    let digest = state.digest()
+        return resp
+    else:
+        #Create a blank sha512 state
+        var state = initSha_512()
 
-    #Cast this to a fhash2 dropping the remaining 32bytes
-    let resp =  cast[ptr FHash2](addr digest)[]
-    
-    return resp
+        state.update(cast[seq[char]](data))
+
+        #Finalize the hash and return it as an a digest
+        let digest = state.digest()
+
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp =  cast[ptr FHash2](addr digest)[]
+
+        return resp
 
 #Define functions to get a portion of the hash as unsigned ints of various lengths
 #These ints will have even distribution over a smaller keyspace, useful for hash table sharding/data partitioning
@@ -206,7 +246,11 @@ when defined(linux) or defined(windows):
         var buff: array[BlockSize, char]
 
         #Define a hash state object for the file
-        var hashState = newSha1State()
+        when USE_NIM_CRYPTO:
+            var hashState: nimcrypto.sha1
+            hashState.init()
+        else:
+            var hashState = newSha1State()
 
         #Open the file for reading and read until we reach EOF
         with open(path, fmRead) as f:
@@ -221,14 +265,21 @@ when defined(linux) or defined(windows):
                 hashState.update(buff[0..<bytesRead])
 
         #Return the hash of the file
-        let resp = hashState.finalize()
+        when USE_NIM_CRYPTO:
+            let resp = hashState.finish()
+        else:
+            let resp = hashState.finalize()
         return cast[FHash](resp)
 
     proc calcFileHash2(path: string, BlockSize: static int=(1024*1024)): FHash2 =#Default to 1MB blocks as this is a good mix between memeory usage and performance on HDDs/IOPS limited systems
         var buff: array[BlockSize, char]
 
         #Define a hash state object for the file
-        var hashState = initSha_512()
+        when USE_NIM_CRYPTO:
+            var hashState: nimcrypto.sha512
+            hashState.init()
+        else:
+            var hashState = initSha_512()
 
         #Open the file for reading and read until we reach EOF
         with open(path, fmRead) as f:
@@ -243,5 +294,8 @@ when defined(linux) or defined(windows):
                 hashState.update(buff[0..<bytesRead])
 
         #Return the hash of the file
-        let resp = hashState.digest()
-        return cast[FHash2](resp)
+        when USE_NIM_CRYPTO:
+            let resp = hashState.finish()
+        else:
+            let resp = hashState.digest()
+        return cast[ptr FHash2](addr resp)[]
