@@ -38,10 +38,11 @@ proc free*[T](self: dArray[T]) =
 
 #------------------------- Properties for accessing data on the array type -------------------------
 ## Returns the element at the given index in the array
-template `[]`*[T](self: dArray[T], index: int): T =
-    if index < 0 or index >= self.size:
+template `[]`*[T](self: dArray[T], index: int|int16|int32|int64|uint16|uint32|uint64): T =
+    let idx = int(index)
+    if idx < 0 or idx >= self.size:
         raise newException(IndexError, "Index out of bounds")
-    self.data[index]
+    self.data[idx]
 
 #Getter for slicing the dynamic array using a range
 template `[]`*[T](self: dArray[T], slice: HSlice[int, int]): seq[T] =
@@ -57,10 +58,11 @@ template `[]`*[T](self: dArray[T], slice: HSlice[int, int]): seq[T] =
     resp
 
 ## Sets the element at the given index in the array to the given value
-template `[]=`*[T](self: dArray[T], index: int, value: T) =
-    if index < 0 or index >= self.size:
+template `[]=`*[T](self: dArray[T], index: int|int16|int32|int64|uint16|uint32|uint64, value: T) =
+    let idx = int(index)
+    if idx < 0 or idx >= self.size:
         raise newException(IndexError, "Index out of bounds")
-    self.data[index] = value
+    self.data[idx] = value
 
 ## Returns the total number of allocated elements in the array (not the number of elements stored or the byte size of the array)
 proc `len`*[T](self: dArray[T]): int {.inline.} =
