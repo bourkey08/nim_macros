@@ -123,14 +123,79 @@ macro class(name: untyped, body: untyped): untyped =
                     val
                 
     block:#Build constructor function that is exposed
+        #Iterate over all calls and check if they are the constructor
+
+        var initCode: NimNode = newNimNode(nnkEmpty)#Will hold the body of the constructor
+        var initArgs = newNimNode(nnkFormalParams)
+
+        for v in body:
+            if v.kind == nnkCall:
+                if v[0].kind == nnkIdent:#Is of the format constructor: 
+                    if $v[0] != "constructor":
+                        continue
+
+                    elif v[0].len <= 1:
+                        continue
+                    
+                    #Set the constructor code, there are no args to deal with
+                    initCode = v[1]
+                    continue
+
+                elif v[0].kind == nnkObjConstr:#Is of the format constructor()                
+                    let argsBody = v[0]
+
+                    
+                    #Make sure this is the constructor by checking the ident of the first object in args 
+                    if argsBody[0].kind != nnkIdent:
+                        continue
+                    elif $argsBody[0] != "constructor":
+                        continue
+                    
+                    #If the constructor takes any arguments then extract them now
+                    if argsBody.len > 1:
+                        for arg in argsBody[1..^1]:
+                            if arg.len < 2:
+                                raise newException(Exception, "Invalid argument definition for constructor: " & $name)
+
+                            initArgs.add newIdentDefs(arg[0], arg[1])
+
+                    initCode = v[1]
+
         #First get the constructor code from the body (it present, its optional)
         #Get the arguments to the constructor and replicate them below
         #Define all let symbols as read/write in constructor
         let constructorName = ident("new" & $name)
-        result.add quote do:
+        #Create the constructor
+        var constNode = quote do:
             proc `constructorName`(): `name` =
                 result = `name`()
 
+                #Bind "self" locally
+                template self(): untyped =
+                    result
+                
+                `initCode`
+
+        #Now if there are arguments for the constructor modify it to add them to its format params
+        if initArgs.len > 0:
+            for node in constNode:
+                if node.kind == nnkFormalParams:
+                    for arg in initArgs:
+                        node.add arg   
+                    break     
+
+        #Finally add it to the result
+        result.add constNode
+
+#[
+macro vvvv(body: untyped) =
+    echo treeRepr(body)
+
+vvvv:
+    proc test(x: int, y: int) =
+        echo x
+        echo y
+]#
 
 class MyBaseClass:
     var test: int32 = 8
@@ -147,16 +212,17 @@ class MyBaseClass:
     method getName2(): string = 
         return "MyBaseClass"
 
-#[
+
 class TestClass2:
     var testId: int
     let testName: string = "TestClass2"
     const testConst: string = "TestClass2Const"
 
-    constructor(id: int):
+    constructor(id: int, name: string):
         self.testId = id
+        echo name
         echo "TestClass2 constructor called with id: ", id
-]#
+
 
 #[
 class MyClass(MyBaseClass):
@@ -173,7 +239,7 @@ class MyClass(MyBaseClass):
 ]#
 
 let myObj = newMyBaseClass()
-#let myObj2 = newTestClass2(42)
+let myObj2 = newTestClass2(42, "testing")
 
 echo myObj[]
 echo myObj.x
