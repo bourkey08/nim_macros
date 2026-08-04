@@ -13,6 +13,7 @@ when not declared(with):
     include "./benchmark.nim"
     include "./options.nim"
     include "./static_strings.nim"
+    import "./dynamic_arrays.nim"
 
     when declared(async):
         include "./async_helpers/async_helpers.nim"
