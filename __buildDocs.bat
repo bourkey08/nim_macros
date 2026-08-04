@@ -1,0 +1,1 @@
+nim doc --outDir:docs --index:on --project:on blib.nim
