@@ -15,6 +15,9 @@ when not declared(with):
     include "./static_strings.nim"
     import "./dynamic_arrays.nim"
 
+    when defined(blibdev):
+        import "./classes.nim"
+
     when declared(async):
         include "./async_helpers/async_helpers.nim"
 
