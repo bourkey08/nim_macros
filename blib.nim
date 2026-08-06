@@ -22,7 +22,7 @@ when not declared(with):
         include "./async_helpers/async_helpers.nim"
 
     when not defined(js):  
-        include "./hashing.nim"   
+        include "./hashing/hashing.nim"   
         include "./network.nim"  
 
         when defined(linux) or defined(macosx) or defined(windows):    

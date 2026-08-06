@@ -9,9 +9,10 @@ when declared(nimcrypto):
 else:
     const USE_NIM_CRYPTO = false
 
-#Define a type for the "fhash", this should always be used in place of array[20, byte] when using a hash as it allows it to be easily changed in the future
-type FHash = array[20, byte]
-type FHash2 = array[32, byte]#Used for 256bit hash type rather than the 160bit sha1 based hashes
+include "./hashing_types.nim"
+include "./hashing_states.nim"
+
+
 
 #Takes a string and calculates the hash returning it as a fhash (20 bytes) rather than a hex string
 func calcFHash(data: string): FHash {.inline.} =  
@@ -41,7 +42,6 @@ func calcFHash[T](data: seq[T]): FHash {.inline.} =
     else:
         let resp = secureHash(data)
         return cast[FHash](resp)
-
 
 #Takes a string and calculates the hash returning it as an fhash2(32bytes)
 proc calcFHash2(data: string): FHash2 {.inline.} =
@@ -299,3 +299,4 @@ when defined(linux) or defined(windows):
         else:
             let resp = hashState.digest()
         return cast[ptr FHash2](addr resp)[]
+
