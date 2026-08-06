@@ -56,13 +56,3 @@ func digest[T](self: FHashState[T]): FHash|FHash2 {.inline.} =
 func hexDigest[T](self: FHashState[T]): string {.inline.} =
     let data = self.digest()    
     return data.toHex()
-
-#[
-
-var hashState: nimcrypto.sha1
-hashState.init()
-
-hashState.update("Hello World")
-echo cast[FHash](hashState.finish()).toHex()
-
-]#
