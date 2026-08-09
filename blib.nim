@@ -24,6 +24,7 @@ when not declared(with):
     when not defined(js):  
         include "./hashing/hashing.nim"   
         include "./network.nim"  
+        import "./hardware.nim"
 
         when defined(linux) or defined(macosx) or defined(windows):    
             include "./system.nim"    
