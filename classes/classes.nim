@@ -2,16 +2,22 @@
 #                                                Implements generic classes using a python style syntax
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
-echo "Importing classes.nim, this is a work in progress and should not be used in production code yet, it is only for testing and development purposes"
-
 import std/[macrocache, macros]
 
-#TODO: Inheritence
-#TODO: Type defs
-#TODO: Constructors
+macro class(className: untyped, body: untyped): untyped =
+    #Split the class name into its parts if its an extended class
+    var name: NimNode
+    var baseClass: NimNode = newNimNode(nnkEmpty)
 
+    block:#Handle splitting up the class name into its parts if its an extended class
+        if className.kind == nnkIdent:
+            name = className
+        elif className.kind == nnkCall and className[0].kind == nnkIdent and className[1].kind == nnkIdent:
+            name = className[0]
+            baseClass = className[1]
+        else:
+            raise newException(Exception, "Invalid class name, must be an identifier")
 
-macro class(name: untyped, body: untyped): untyped =
     result = newStmtList()
 
     #Returns the variables defined on the class, this will be any top level variable declarations
@@ -33,11 +39,12 @@ macro class(name: untyped, body: untyped): untyped =
                 if stmt[0].len != 3:
                     raise newException(Exception, "Invalid variable declaration in class, must be of the form: var name: type = defaultValue")
 
-                if stmt[0][0].kind != nnkIdent:
+                if stmt[0][0].kind != nnkIdent:#Variable name
                     raise newException(Exception, "Invalid variable name in class, must be an identifier")
-
-                if stmt[0][1].kind != nnkIdent:
-                    raise newException(Exception, "Invalid variable type in class, must be a type")          
+                
+                #Handle variable type
+                if stmt[0][1].kind != nnkIdent and stmt[0][1].kind != nnkBracketExpr and stmt[0][1].kind != nnkDotExpr:
+                    raise newException(Exception, "Invalid variable type in class, must be a type")                    
                 
                 #Get the default value if it exists
                 var hasDefault = false
@@ -102,8 +109,16 @@ macro class(name: untyped, body: untyped): untyped =
                 fields.add newIdentDefs(nameIdent, typeIdent)
 
         #Define the type itself
-        var typeDef = quote do:
-            type `name` = ref object
+        var typeDef: NimNode
+        if name.kind == nnkIdent:
+            if baseClass.kind == nnkEmpty:#Base class
+                typeDef = quote do:
+                    type `name` = ref object of RootObj
+            else:#Extended class
+                typeDef = quote do:
+                    type `name` = ref object of `baseClass`
+        else:
+            raise newException(Exception, "Invalid class name, must be an identifier")
 
         #Then set the fields for the type
         typeDef[0][2][0][2] = fields
@@ -121,25 +136,24 @@ macro class(name: untyped, body: untyped): untyped =
                 template `thisNameIdent`(self: `name`): untyped =
                     let val = self.`realNameIdent`
                     val
-                
+
     block:#Build constructor function that is exposed
         #Iterate over all calls and check if they are the constructor
-
         var initCode: NimNode = newNimNode(nnkEmpty)#Will hold the body of the constructor
-        var initArgs = newNimNode(nnkFormalParams)
+        var initArgs = newNimNode(nnkFormalParams)        
 
         for v in body:
-            if v.kind == nnkCall:
+            if v.kind == nnkCall:                
                 if v[0].kind == nnkIdent:#Is of the format constructor: 
                     if $v[0] != "constructor":
                         continue
 
-                    elif v[0].len <= 1:
+                    elif v.len <= 1:
                         continue
                     
                     #Set the constructor code, there are no args to deal with
-                    initCode = v[1]
-                    continue
+                    initCode = newStmtList(v[1])
+
 
                 elif v[0].kind == nnkObjConstr:#Is of the format constructor()                
                     let argsBody = v[0]
@@ -158,8 +172,6 @@ macro class(name: untyped, body: untyped): untyped =
                                 raise newException(Exception, "Invalid argument definition for constructor: " & $name)
 
                             initArgs.add newIdentDefs(arg[0], arg[1])
-
-                    initCode = v[1]
 
         #First get the constructor code from the body (it present, its optional)
         #Get the arguments to the constructor and replicate them below
@@ -182,67 +194,74 @@ macro class(name: untyped, body: untyped): untyped =
                 if node.kind == nnkFormalParams:
                     for arg in initArgs:
                         node.add arg   
-                    break     
+                    break 
 
         #Finally add it to the result
         result.add constNode
 
-#[
-macro vvvv(body: untyped) =
-    echo treeRepr(body)
+    block:#Update all funcs, procs and methods to have access to self
+        for v in body:
+            case v.kind:
+            of nnkProcDef, nnkFuncDef, nnkMethodDef:
+                #Split out the function definition with its arguments, and the body
+                let funcName = newIdentNode($v[0])
+                let funcBody = newStmtList(v[4..^1])
 
-vvvv:
-    proc test(x: int, y: int) =
-        echo x
-        echo y
-]#
+                var funcArgs: seq[NimNode]
+                var funcRet: NimNode
+                var hasReturn = false
 
-class MyBaseClass:
-    var test: int32 = 8
-    let x: uint64 = 1234
-    constructor:
-        echo "MyBaseClass constructor called"
+                for node in v:
+                    if node.kind == nnkFormalParams:
+                        if node[0].kind == nnkIdent:
+                            funcRet = node[0]
+                            hasReturn = true
 
-    func getTest(): string = 
-        return "Hello from MyBaseClass"
+                        if node.len > 1:
+                            funcArgs = node[1..<node.len]
+                        else:
+                            funcArgs = @[]
 
-    func getName(): string = 
-        return "MyBaseClass"
+                #Add the function definition
+                var funcCall: NimNode
+                let self = newIdentNode("self")
 
-    method getName2(): string = 
-        return "MyBaseClass"
+                case v.kind:
+                of nnkProcDef:
+                    funcCall = quote do:
+                        proc `funcName`(`self`: `name`) =
+                            `funcBody`
+                of nnkFuncDef:
+                    funcCall = quote do:
+                        func `funcName`(`self`: `name`) =
+                            `funcBody`
+                of nnkMethodDef:
+                    funcCall = quote do:
+                        method `funcName`(`self`: `name`) =
+                            `funcBody`
+                else:
+                    discard
 
+                #Now add the return argument if there is one
+                if hasReturn:
+                    for node in funcCall:
+                        if node.kind == nnkFormalParams:
+                            node[0] = funcRet
+                            break
+                
+                #Now add the remaining arguments if there are any
+                if funcArgs.len > 0:                    
+                    for node in funcCall:                        
+                        if node.kind == nnkFormalParams:
+                            for funcArg in funcArgs:
+                                node.add funcArg
+                            break
 
-class TestClass2:
-    var testId: int
-    let testName: string = "TestClass2"
-    const testConst: string = "TestClass2Const"
+                #Finally add the function to the result
+                result.add funcCall
+            else:
+                discard
 
-    constructor(id: int, name: string):
-        self.testId = id
-        echo name
-        echo "TestClass2 constructor called with id: ", id
-
-
-#[
-class MyClass(MyBaseClass):
-    var stateTbl: Table[string, int]
-
-    constructor():
-        self.stateTbl["name"] = "Hello World"
-
-    func getName(): string = 
-        return self.stateTbl["name"]
-
-    method getName2(): string = 
-        return self.stateTbl["name"]
-]#
-
-let myObj = newMyBaseClass()
-let myObj2 = newTestClass2(42, "testing")
-
-echo myObj[]
-echo myObj.x
-
-
-quit()
+#Include the tests if the appropriate flag is set, this is for development purposes only and should not be used in production code
+when defined(blibdev_classes):
+    include "./classes_tests.nim"

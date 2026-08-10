@@ -13,10 +13,8 @@ when not declared(with):
     include "./benchmark.nim"
     include "./options.nim"
     include "./static_strings.nim"
-    import "./dynamic_arrays.nim"
-
-    when defined(blibdev):
-        import "./classes.nim"
+    import "./dynamic_arrays.nim"    
+    import "./classes/classes.nim"
 
     when declared(async):
         include "./async_helpers/async_helpers.nim"
