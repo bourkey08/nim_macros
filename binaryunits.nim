@@ -1,7 +1,9 @@
 import macros, strutils
 
 #Takes a string containing a value with a unit and converts this to bytes/bits
-func parseBinaryUnits(text: string, retBits: static[bool]=false): int {.inline.} =
+func parseBinaryUnits(rawText: string, retBits: static[bool]=false): int {.inline.} =
+    let text = rawText.replace(" ", "")
+    
     #Define 2 sequences we will add all characters to based on if they are numbers
     var intchars: seq[char] = @[]
     var unitchars: seq[char] = @[]
