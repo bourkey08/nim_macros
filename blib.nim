@@ -45,7 +45,7 @@ when not declared(with):
         import "./time.nim"  
 
     when declared(bconsole):
-        include "./console.nim"
+        include "./console/console.nim"
 
     when defined(js):
         include "./js.nim"
