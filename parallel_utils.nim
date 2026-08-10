@@ -278,40 +278,41 @@ macro pExp(v: untyped, rnge: untyped, body: untyped): untyped =
 #Implements a macro that allows a block of code to be run in a thread and awaited using a future
 #This is used to allow async interfaces to be used in threaded code that is not async aware
 #Note: This should not be used in a loop as it will cause issues with multiple completions of a single future
-macro inThread(body: untyped): Future[void] =
-    bPoolFuncCounter.inc()
-    result = newStmtList()
+when defined(Future):
+    macro inThread(body: untyped): Future[void] =
+        bPoolFuncCounter.inc()
+        result = newStmtList()
 
-    #Ensure the thread pool is initialized
-    result.add quote do:
-        initBPool()
+        #Ensure the thread pool is initialized
+        result.add quote do:
+            initBPool()
 
-    #Define identifiers used in the generated code to ensure unique names for each macro call and avoid name collisions
-    let poolName = newIdentNode("bThreadPoolGInst")
-    let bodyIndent = newIdentNode("body_" & $bPoolFuncCounter.value)
-    let wrapper = newIdentNode("wrapper_" & $bPoolFuncCounter.value)        
+        #Define identifiers used in the generated code to ensure unique names for each macro call and avoid name collisions
+        let poolName = newIdentNode("bThreadPoolGInst")
+        let bodyIndent = newIdentNode("body_" & $bPoolFuncCounter.value)
+        let wrapper = newIdentNode("wrapper_" & $bPoolFuncCounter.value)        
 
-    #Build the body method that is called by the thread pool
-    result.add quote do:
-        var respFut: Future[void] = newFuture[void]()
+        #Build the body method that is called by the thread pool
+        result.add quote do:
+            var respFut: Future[void] = newFuture[void]()
 
-        proc `bodyIndent`(index: int) =
-            gcSafe:
-                `body`
+            proc `bodyIndent`(index: int) =
+                gcSafe:
+                    `body`
 
-            respFut.complete()
+                respFut.complete()
 
-        #Now dispatch the job to the thread pool
-        let idx: int = 0
-        var jobEntry: tuple[f: proc(index: int), i: int] = (`bodyIndent`, idx)
-        `poolName`.chann.send(jobEntry)
+            #Now dispatch the job to the thread pool
+            let idx: int = 0
+            var jobEntry: tuple[f: proc(index: int), i: int] = (`bodyIndent`, idx)
+            `poolName`.chann.send(jobEntry)
 
-        #Return the future to the caller
-        proc `wrapper`(baseFut: Future[void]): Future[void] {.async.} =
-            while true:       
-                if baseFut.finished:
-                    break
-                else:
-                    await sleepAsync(1)
+            #Return the future to the caller
+            proc `wrapper`(baseFut: Future[void]): Future[void] {.async.} =
+                while true:       
+                    if baseFut.finished:
+                        break
+                    else:
+                        await sleepAsync(1)
 
-        `wrapper`(respFut)
+            `wrapper`(respFut)
