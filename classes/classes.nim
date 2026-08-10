@@ -4,7 +4,7 @@
 
 import std/[macrocache, macros]
 
-macro class(className: untyped, body: untyped): untyped =
+macro class*(className: untyped, body: untyped): untyped =
     #Split the class name into its parts if its an extended class
     var name: NimNode
     var baseClass: NimNode = newNimNode(nnkEmpty)
