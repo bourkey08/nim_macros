@@ -14,6 +14,7 @@ type BThreadPool = ref object
 var poolInitCodeGenerated {.compileTime.} = false
 const bPoolFuncCounter = CacheCounter"bPoolFuncCounter"#Used to allocate unique variable names
 var bThreadPoolGInst: BThreadPool
+var bThreadPoolGInst_ThreadCount: int = 0#Used to allow explicitly setting the thread count
 
 #Constructor for the thread pool
 proc newBThreadPool(tCount: int): BThreadPool =
@@ -53,11 +54,18 @@ macro initBPool(count: static int = 0): untyped =
         #This needs to be at runtime so we get the correct number of processors
         let tCount = tern(`count` == 0, cpuinfo.countProcessors(), `count`)
 
-        #Create a globally scoped thread pool
-        `poolName` = newBThreadPool(tCount)
+        #Create a globally scoped thread pool, use the thread count if its set otherwise use the default logic to set the thread count
+        if bThreadPoolGInst_ThreadCount > 0:
+            `poolName` = newBThreadPool(bThreadPoolGInst_ThreadCount)
+        else:
+            `poolName` = newBThreadPool(tCount)
 
         for i in 0..<tCount:
             createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
+
+#Called to set the number of threads to be used when constructing the thread pool, this must be called before any logic that will implicitly create a pool
+proc setBThreadCount(count: int) =
+    bThreadPoolGInst_ThreadCount = count
 
 macro pFor(i: untyped, rnge: untyped, body: untyped): untyped =
     bPoolFuncCounter.inc()

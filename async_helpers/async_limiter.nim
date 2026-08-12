@@ -75,7 +75,6 @@ proc release(self: AsyncLimiterLock) =
 
 #Aquire a lock for the async limiter, returns a lock object with a release method
 proc acquire(self: AsyncLimiter): Future[AsyncLimiterLock] {.async.} =
-
     if self.limit == 0:
         return AsyncLimiterLock(limiter: self)#
     

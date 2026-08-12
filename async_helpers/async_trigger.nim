@@ -10,7 +10,6 @@ type AsyncTrigger = ref object
     futSet: bool = false
     fut: Future[void]
 
-
 #Constructor for the async trigger object
 proc newAsyncTrigger(autoReset: bool = true): AsyncTrigger =
     result = AsyncTrigger(
@@ -63,5 +62,3 @@ proc wait(self: AsyncTrigger): Future[void] {.async.} =
             self.futSet = false
 
         await self.fut
-
-        
