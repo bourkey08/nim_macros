@@ -72,4 +72,4 @@ template getPtr*[T](self: dArray[T], idx: int): pointer =
     ## Returns a pointer to the element at the given index in the array
     if idx < 0 or idx >= self.size:
         raise newException(IndexError, "Index out of bounds")
-    return cast[pointer](self.data[idx].addr)
+    cast[pointer](self.data[idx].addr)
