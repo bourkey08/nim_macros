@@ -67,3 +67,9 @@ template `[]=`*[T](self: dArray[T], index: int|int16|int32|int64|uint16|uint32|u
 ## Returns the total number of allocated elements in the array (not the number of elements stored or the byte size of the array)
 proc `len`*[T](self: dArray[T]): int {.inline.} =
     return self.size
+
+template getPtr*[T](self: dArray[T], idx: int): pointer =
+    ## Returns a pointer to the element at the given index in the array
+    if idx < 0 or idx >= self.size:
+        raise newException(IndexError, "Index out of bounds")
+    return cast[pointer](self.data[idx].addr)
