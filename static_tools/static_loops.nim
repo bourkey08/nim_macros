@@ -51,8 +51,3 @@ macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
                 var `v` = `child`
                 `body`
                 `child` = `v`
-
-sFor i in 0..<10:
-    echo i*2
-
-quit()
