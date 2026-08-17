@@ -17,7 +17,8 @@ when not declared(with):
     include "./benchmark.nim"
     include "./options.nim"
     include "./static_strings.nim"
-    import "./dynamic_arrays.nim"    
+    include "./static_tools/static_tools.nim"
+    import "./structs/structs.nim"    
     import "./classes/classes.nim"
 
     when not defined(js):  

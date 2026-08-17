@@ -152,20 +152,13 @@ macro psizeof*(t: typedesc): untyped =
         else:
             sizeof (`t`)
 
-
-#Takes a look in the format expandLoop ident, {seq of values} and applys the body to each value in the seq
-macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
+#Implements a method for .mapIt style transformations
+macro tIt(val: untyped, body: varargs[untyped]): untyped =
     result = newStmtList()
 
-    if v.kind != nnkIdent:
-        raise newException(ValueError, "First argument to expandLoop must be an identifier")
+    let ident = newIdentNode("it")
 
-    if rng.kind != nnkCurly:
-        raise newException(ValueError, "Second argument to expandLoop must be a bracket expression")
-    
-    for child in rng:
-        result.add quote do:
-            block:
-                var `v` = `child`
-                `body`
-                `child` = `v`
+    result.add quote do:
+        block:
+            let `ident` = `val`
+            `body`
