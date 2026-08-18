@@ -38,6 +38,10 @@ proc newAsyncBWLimiter*(bandwithLimit: uint64|string, timeWindow: uint64 = 500):
 
 ## Called to increment the bytes downloaded by the specified count without checking the limit
 proc update(self: AsyncBWLimiter, count: uint64) {.inline.} =
+    #If no limit is specified then we dont need to actually do anything
+    if self.sets.limit == 0:
+        return
+
     let now = time_ms()
 
     #First check the ammount of data to remove from the total
@@ -59,6 +63,10 @@ proc update(self: AsyncBWLimiter, count: uint64) {.inline.} =
 
 ## Syncronous non blocking method for checking if there is enough bandwith available to update with a given count
 proc check(self: AsyncBWLimiter, count: uint64): bool {.inline.} =
+    #If no limit is specified then we dont need to actually do anything
+    if self.sets.limit == 0:
+        return true
+
     #First check if there is enough bandwith to update without factoring in the time elapsed
     if self.total + count <= self.sets.limit:
         return true
@@ -87,6 +95,10 @@ proc check(self: AsyncBWLimiter, count: uint64): bool {.inline.} =
 ## Combines check and update into a single method with an async sleep if the limit is reached
 ## This will block the current thread until the limit is available to update with the given count or the timeout is reached
 proc limit(self: AsyncBWLimiter, count: uint64, timeout: uint64 = 0): Future[bool] {.async.} =
+    #If no limit is specified then we dont need to actually do anything
+    if self.sets.limit == 0:
+        return true
+    
     #Check if there is enough bandwith available to update with the given count
     if self.total + count <= self.sets.limit:
         self.total += count
