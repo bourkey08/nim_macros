@@ -81,10 +81,9 @@ func parseBinaryUnits(rawText: string, retBits: static[bool]=false): int {.inlin
         return multiplier * parseInt(intstr)
 
 #Takes a value in bytes and returns it formatted as a string with the appropriate unit
-func formatBinaryUnits(value: auto, places: int = 2): string {.inline.} =
+func formatBinaryUnits(value: auto, places: int = -1): string {.inline.} =
     if value == 0:
         return "0 B"
-
     #First lets work out the units to use and divide out the value as we go
     var unit: string = "B"
     var val= float64(value)
@@ -118,8 +117,17 @@ func formatBinaryUnits(value: auto, places: int = 2): string {.inline.} =
     #Now format the value to the required number of decimal places
     var resp = $val
     let split = resp.split(".")
-    if places > 0 and split.len > 1:
+
+    #Handle -1 as a special case to cap to 2 decimal places but not pad
+    if places < 0:#Negative places are treated as a cap rather than a fixed number of digits
+        let placesCap = abs(places)
+        resp = split[0] & "." & split[1][0..<min(placesCap, split[1].len)]
+    elif places > 0:
+        #Pad the decimal part to the required number of places
         resp = split[0] & "." & split[1][0..<min(places, split[1].len)]
+
+        if min(places, split[1].len) < places:
+            resp = resp & "0".repeat(places - min(places, split[1].len))
     else:
         resp = split[0]
     #And return the value with the unit
