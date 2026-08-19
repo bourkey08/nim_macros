@@ -327,3 +327,51 @@ when declared(Future):
 
             let fut = (`wrapper`(respFut))
             fut
+
+    #Works the same as inThread but returns the result of the body block as a future
+    macro doThread(body: typed): untyped =
+        bPoolFuncCounter.inc()
+        result = newStmtList()
+
+        #Ensure the thread pool is initialized
+        result.add quote do:
+            initBPool()
+
+        #Define identifiers used in the generated code to ensure unique names for each macro call and avoid name collisions
+        let poolName = newIdentNode("bThreadPoolGInst")
+        let bodyIndent = newIdentNode("body_" & $bPoolFuncCounter.value)
+        let wrapper = newIdentNode("wrapper_" & $bPoolFuncCounter.value)        
+
+        #Build the body method that is called by the thread pool
+        result.add quote do:
+            var respFut: Future[typeof `body`] = newFuture[typeof `body`]()
+
+            proc `bodyIndent`(index: int) =
+                let val = gcSafe:
+                    `body`
+
+                respFut.complete(val)
+
+            #Now dispatch the job to the thread pool
+            let idx: int = 0
+            var jobEntry: tuple[f: proc(index: int), i: int] = (`bodyIndent`, idx)
+            `poolName`.chann.send(jobEntry)
+
+            #Return the future to the caller
+            proc `wrapper`(baseFut: Future[typeof `body`]): Future[typeof `body`] {.async.} =
+                while true:       
+                    if baseFut.finished:
+                        return await baseFut
+                    else:
+                        await sleepAsync(1)
+
+            (`wrapper`(respFut))
+
+    #Calls do thread and automatically injects an await for the future returned
+    macro runInThread(body: untyped): untyped =
+        result = newStmtList()
+
+        #Call doThread and await the future returned
+        result.add quote do:
+            let futa = doThread(`body`)
+            await futa
