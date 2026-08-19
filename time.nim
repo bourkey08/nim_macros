@@ -207,7 +207,15 @@ func parseTime*(val: string, unit: string = "s"): int {.inline.} =
     else:
         raise newException(ValueError, "Invalid unit string");
 
-func formatDuration*(duration: float|float64|float32|int|int64|int32|uint64|uint32|uint, unit: string = "s"): string  =
+
+## Supported units are
+##  - d, day, days
+##  - h, hr, hour, hours
+##  - m, min, minute, minutes
+##  - s, sec, second, seconds
+##  - ms, milli, millisecond, milliseconds
+## forcePlaces can be set to force the display of minutes/hours/days
+func formatDuration*(duration: float|float64|float32|int|int64|int32|uint64|uint32|uint, unit: string = "s", forcePlaces: int = -1): string  =
     #First convert the duration to seconds
     var seconds = 0
     case unit.toLower():
@@ -238,6 +246,20 @@ func formatDuration*(duration: float|float64|float32|int|int64|int32|uint64|uint
                     strVal = "0" & strVal
 
             parts.add(strVal)
+
+    #Now apply the force places logic if its set 
+    if forcePlaces > 0:
+        while parts.len < forcePlaces:
+            parts.insert("00")
+
+        #Now ensure the parts have the correct minimum length
+        for i in 0..<parts.len:
+            if parts.len - i > forcePlaces:
+                continue#Skip any parts out of the scope of force places
+
+            #Make the 3 time components always 2 digits but not the days component
+            if parts[i].len < 2 and (parts.len <= 3 or i > 0):
+                parts[i] = "0" & parts[i]
 
     #Now join the parts into a single string
     if parts.len == 4:
