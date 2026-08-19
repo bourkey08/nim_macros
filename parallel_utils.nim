@@ -57,11 +57,13 @@ macro initBPool(count: static int = 0): untyped =
         #Create a globally scoped thread pool, use the thread count if its set otherwise use the default logic to set the thread count
         if bThreadPoolGInst_ThreadCount > 0:
             `poolName` = newBThreadPool(bThreadPoolGInst_ThreadCount)
+            for i in 0..<bThreadPoolGInst_ThreadCount:
+                createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
         else:
             `poolName` = newBThreadPool(tCount)
 
-        for i in 0..<tCount:
-            createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
+            for i in 0..<tCount:
+                createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
 
 #Called to set the number of threads to be used when constructing the thread pool, this must be called before any logic that will implicitly create a pool
 proc setBThreadCount(count: int) =
@@ -286,7 +288,7 @@ macro pExp(v: untyped, rnge: untyped, body: untyped): untyped =
 #Implements a macro that allows a block of code to be run in a thread and awaited using a future
 #This is used to allow async interfaces to be used in threaded code that is not async aware
 #Note: This should not be used in a loop as it will cause issues with multiple completions of a single future
-when defined(Future):
+when declared(Future):
     macro inThread(body: untyped): Future[void] =
         bPoolFuncCounter.inc()
         result = newStmtList()
@@ -323,4 +325,5 @@ when defined(Future):
                     else:
                         await sleepAsync(1)
 
-            `wrapper`(respFut)
+            let fut = (`wrapper`(respFut))
+            fut
