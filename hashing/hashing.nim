@@ -13,7 +13,6 @@ include "./hashing_types.nim"
 include "./hashing_states.nim"
 
 
-
 #Takes a string and calculates the hash returning it as a fhash (20 bytes) rather than a hex string
 func calcFHash(data: string): FHash {.inline.} =  
     when USE_NIM_CRYPTO:
@@ -25,6 +24,14 @@ func calcFHash(data: string): FHash {.inline.} =
 
 #As above but for sequences of characters
 func calcFHash(data: openArray[char]): FHash {.inline.} =
+    when USE_NIM_CRYPTO:
+        let resp = nimcrypto.sha1.digest(data)
+        return cast[FHash](resp)
+    else:
+        let resp = secureHash(data)
+        return cast[FHash](resp)
+
+func calcFHash(data: openArray[byte]): FHash {.inline.} =
     when USE_NIM_CRYPTO:
         let resp = nimcrypto.sha1.digest(data)
         return cast[FHash](resp)
@@ -70,6 +77,31 @@ proc calcFHash2(data: string): FHash2 {.inline.} =
 
 #As above but for sequences of characters
 proc calcFHash2(data: openArray[char]): FHash2 {.inline.} =
+    when USE_NIM_CRYPTO:
+        #Calculate the sha512 hash of the data
+        let digest = nimcrypto.sha512.digest(data)
+
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp = cast[ptr FHash2](addr digest)[]
+
+        return resp
+    else:
+        #Create a blank sha512 state
+        var state = initSha_512()
+
+        #Update it with the data
+        state.update(data)
+
+        #Finalize the hash and return it as an a digest
+        let digest = state.digest()
+
+        #Cast this to a fhash2 dropping the remaining 32bytes
+        let resp =  cast[ptr FHash2](addr digest)[]
+
+        return resp
+
+#As above but for sequences of characters
+proc calcFHash2(data: openArray[byte]): FHash2 {.inline.} =
     when USE_NIM_CRYPTO:
         #Calculate the sha512 hash of the data
         let digest = nimcrypto.sha512.digest(data)

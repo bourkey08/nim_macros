@@ -17,7 +17,7 @@ func newFHash2(): FHashState[2] =
         result.state.init()
 
 #Update the hash state with more data
-func update[T](self: FHashState[T], data: string|seq[byte]|seq[char]|FHash|FHash2) {.inline.} =
+func update[T](self: FHashState[T], data: string|openArray[byte]|openArray[char]|FHash|FHash2) {.inline.} =
     
     when T == 1:
         self.state.update(data)
