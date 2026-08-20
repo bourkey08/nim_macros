@@ -73,3 +73,9 @@ template getPtr*[T](self: dArray[T], idx: int): pointer =
     if idx < 0 or idx >= self.size:
         raise newException(IndexError, "Index out of bounds")
     cast[pointer](self.data[idx].addr)
+
+#Called to get a view of a subset of the dynamic array as an open array, this is useful for passing a subset of the array to functions that take an open array as an argument
+template getView*[T](self: dArray[T], startIdx: int, length: int): untyped =
+    if `startIdx` < 0 or `startIdx` + `length` >= `self`.size or `startIdx` + `length` <= 0:
+        raise newException(IndexError, "View out of bounds")
+    toOpenArray(`self`.data, `startIdx`, `startIdx`+`length`)
