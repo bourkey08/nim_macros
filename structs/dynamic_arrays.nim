@@ -4,10 +4,13 @@
 
 #---------------------------------------------- Types ----------------------------------------------
 #Type for a heap allocated array with a sized set at runtime
-type dArray*[T] = ref object 
-    size: int
-    freed: bool = false#Flag that is set to true once the array has been freed from memory
-    data: ptr UncheckedArray[T]
+type
+    dArrayObj*[T] = object
+        size: int
+        freed: bool = false#Flag that is set to true once the array has been freed from memory
+        data: ptr UncheckedArray[T]
+
+    dArray*[T] = ref dArrayObj[T]
 
 #----------------------------------- Constructors and Destructors ----------------------------------
 
@@ -18,6 +21,11 @@ proc newdArray*[T](size: int): dArray[T] =
         size: size,
         data: cast[ptr UncheckedArray[T]](alloc(size * sizeof(T)))
     )
+
+proc `=destroy`*[T](self: dArrayObj[T]) =
+    ## Frees the memory used by the dynamic array
+    if not self.freed:
+        dealloc(cast[pointer](self.data))
 
 ## Called to explicitly free the memory used by the dynamic array
 proc destroy*[T](self: dArray[T]) =
