@@ -33,7 +33,7 @@ func calcFHash(data: openArray[char]): FHash {.inline.} =
 
 func calcFHash(data: openArray[byte]): FHash {.inline.} =
     when USE_NIM_CRYPTO:
-        let resp = nimcrypto.sha1.digest(tmpData)
+        let resp = nimcrypto.sha1.digest(data)
         return cast[FHash](resp)
     else:
         let resp = secureHash(cast[ptr openArray[char]](data.addr)[])
