@@ -33,10 +33,10 @@ func calcFHash(data: openArray[char]): FHash {.inline.} =
 
 func calcFHash(data: openArray[byte]): FHash {.inline.} =
     when USE_NIM_CRYPTO:
-        let resp = nimcrypto.sha1.digest(data)
+        let resp = nimcrypto.sha1.digest(tmpData)
         return cast[FHash](resp)
     else:
-        let resp = secureHash(data)
+        let resp = secureHash(cast[ptr openArray[char]](data.addr)[])
         return cast[FHash](resp)
 
 #As above but for sequences of bytes
@@ -115,7 +115,7 @@ proc calcFHash2(data: openArray[byte]): FHash2 {.inline.} =
         var state = initSha_512()
 
         #Update it with the data
-        state.update(data)
+        state.update(cast[ptr openArray[char]](data.addr)[])
 
         #Finalize the hash and return it as an a digest
         let digest = state.digest()
