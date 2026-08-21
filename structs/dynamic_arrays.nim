@@ -10,11 +10,6 @@ type dArray*[T] = ref object
     data: ptr UncheckedArray[T]
 
 #----------------------------------- Constructors and Destructors ----------------------------------
-# Define a destructor for this specific type of the dynamic array to free its memory when it goes out of scope    
-proc `=destroy`[T: typedesc](x: var typeof dArray[T]()[]) =
-    if not x.freed:
-        dealloc(cast[pointer](x.data))
-        x.freed = true
 
 #Allocate a new dynamic array of a given size and type
 proc newdArray*[T](size: int): dArray[T] =
@@ -40,15 +35,17 @@ proc free*[T](self: dArray[T]) =
 ## Returns the element at the given index in the array
 template `[]`*[T](self: dArray[T], index: int|int16|int32|int64|uint16|uint32|uint64): T =
     let idx = int(index)
-    if idx < 0 or idx >= self.size:
-        raise newException(IndexError, "Index out of bounds")
+    when compileOption("boundChecks"):
+        if idx < 0 or idx >= self.size:
+            raise newException(IndexError, "Index out of bounds")
     self.data[idx]
 
 #Getter for slicing the dynamic array using a range
 template `[]`*[T](self: dArray[T], slice: HSlice[int, int]): seq[T] =
     ## Returns a sequence containing the elements in the given range of the dynamic array
-    if slice.a < 0 or slice.b >= self.size:
-        raise newException(IndexError, "Slice out of bounds")
+    when compileOption("boundChecks"):
+        if slice.a < 0 or slice.b >= self.size:
+            raise newException(IndexError, "Slice out of bounds")
 
     let length = slice.b - slice.a + 1
     var resp = newSeq[T](length)
@@ -60,8 +57,9 @@ template `[]`*[T](self: dArray[T], slice: HSlice[int, int]): seq[T] =
 ## Sets the element at the given index in the array to the given value
 template `[]=`*[T](self: dArray[T], index: int|int16|int32|int64|uint16|uint32|uint64, value: T) =
     let idx = int(index)
-    if idx < 0 or idx >= self.size:
-        raise newException(IndexError, "Index out of bounds")
+    when compileOption("boundChecks"):
+        if idx < 0 or idx >= self.size:
+            raise newException(IndexError, "Index out of bounds")
     self.data[idx] = value
 
 ## Returns the total number of allocated elements in the array (not the number of elements stored or the byte size of the array)
@@ -70,18 +68,21 @@ proc `len`*[T](self: dArray[T]): int {.inline.} =
 
 template getPtr*[T](self: dArray[T], idx: int): pointer =
     ## Returns a pointer to the element at the given index in the array
-    if idx < 0 or idx >= self.size:
-        raise newException(IndexError, "Index out of bounds")
+    when compileOption("boundChecks"):
+        if idx < 0 or idx >= self.size:
+            raise newException(IndexError, "Index out of bounds")
     cast[pointer](self.data[idx].addr)
 
 #Called to get a view of a subset of the dynamic array as an open array, this is useful for passing a subset of the array to functions that take an open array as an argument
 template getView*[T](self: dArray[T], startIdx: int, length: int): untyped =
-    if `startIdx` < 0 or `startIdx` + `length` >= `self`.size or `startIdx` + `length` <= 0:
-        raise newException(IndexError, "View out of bounds startIdx: " & $`startIdx` & " length: " & $`length` & " size: " & $`self`.size)
+    when compileOption("boundChecks"):
+        if `startIdx` < 0 or `startIdx` + `length` >= `self`.size or `startIdx` + `length` <= 0:
+            raise newException(IndexError, "View out of bounds startIdx: " & $`startIdx` & " length: " & $`length` & " size: " & $`self`.size)
     toOpenArray(`self`.data, `startIdx`, `startIdx`+`length`)
 
 #Works the same as getView but uses absolute indexes rather than start and length
 template getViewAbs*[T](self: dArray[T], startIdx: int, endIdx: int): untyped =
-    if `startIdx` < 0 or `endIdx` - 1 >= `self`.size or `startIdx` > `endIdx` - 1:
-        raise newException(IndexError, "View out of bounds startIdx: " & $`startIdx` & " endIdx: " & $`endIdx` & " size: " & $`self`.size)
+    when compileOption("boundChecks"):
+        if `startIdx` < 0 or `endIdx` - 1 >= `self`.size or `startIdx` > `endIdx` - 1:
+            raise newException(IndexError, "View out of bounds startIdx: " & $`startIdx` & " endIdx: " & $`endIdx` & " size: " & $`self`.size)
     toOpenArray(`self`.data, `startIdx`, `endIdx` - 1)
