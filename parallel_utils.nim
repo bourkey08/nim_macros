@@ -10,8 +10,7 @@ type BThreadPool = ref object
     threads: seq[Thread[tuple[pool: BThreadPool, idx: int]]]
     chann: Channel[tuple[f: proc(index: int), i: int]]
 
-#Define globally scoped variable for the thread pool instance and a flag to ensure init code is only generated once
-var poolInitCodeGenerated {.compileTime.} = false
+#Define globally scoped variable for the thread pool instance
 const bPoolFuncCounter = CacheCounter"bPoolFuncCounter"#Used to allocate unique variable names
 var bThreadPoolGInst: BThreadPool
 var bThreadPoolGInst_ThreadCount: int = 0#Used to allow explicitly setting the thread count
@@ -41,29 +40,28 @@ proc threadPoolMethod(args: tuple[pool: BThreadPool, idx: int]) {.thread.} =
 macro initBPool(count: static int = 0): untyped =
     let poolName = newIdentNode("bThreadPoolGInst")
 
-    when not poolInitCodeGenerated:
-        poolInitCodeGenerated = true
-    else:
-        return newStmtList() #No code generated on subsequent calls
-
+    #Every expansion emits the init code, the runtime isNil guard below ensures only one pool is ever created
+    #regardless of which call site executes first
     result = quote do:
         #If the thread pool is required make sure we have a suitable memory manager
         when not defined(gcOrc) and not declared(gcArc) and not defined(gcAtomicArc):
             raise newException(ValueError, "parallelUtils.nim requires orc or arc memory manager to be enabled")
 
-        #This needs to be at runtime so we get the correct number of processors
-        let tCount = tern(`count` == 0, cpuinfo.countProcessors(), `count`)
+        #Only create the pool if it does not already exist, the generating call site may execute multiple times
+        if `poolName`.isNil:
+            #This needs to be at runtime so we get the correct number of processors
+            let tCount = tern(`count` == 0, cpuinfo.countProcessors(), `count`)
 
-        #Create a globally scoped thread pool, use the thread count if its set otherwise use the default logic to set the thread count
-        if bThreadPoolGInst_ThreadCount > 0:
-            `poolName` = newBThreadPool(bThreadPoolGInst_ThreadCount)
-            for i in 0..<bThreadPoolGInst_ThreadCount:
-                createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
-        else:
-            `poolName` = newBThreadPool(tCount)
+            #Create a globally scoped thread pool, use the thread count if its set otherwise use the default logic to set the thread count
+            if bThreadPoolGInst_ThreadCount > 0:
+                `poolName` = newBThreadPool(bThreadPoolGInst_ThreadCount)
+                for i in 0..<bThreadPoolGInst_ThreadCount:
+                    createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
+            else:
+                `poolName` = newBThreadPool(tCount)
 
-            for i in 0..<tCount:
-                createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
+                for i in 0..<tCount:
+                    createThread(`poolName`.threads[i], threadPoolMethod, (`poolName`, i))
 
 #Called to set the number of threads to be used when constructing the thread pool, this must be called before any logic that will implicitly create a pool
 proc setBThreadCount(count: int) =
