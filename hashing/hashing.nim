@@ -11,7 +11,7 @@ else:
 
 include "./hashing_types.nim"
 include "./hashing_states.nim"
-
+include "./hashing_parse.nim"
 
 #Takes a string and calculates the hash returning it as a fhash (20 bytes) rather than a hex string
 func calcFHash(data: string): FHash {.inline.} =  
