@@ -20,6 +20,7 @@ when not declared(with):
     include "./static_tools/static_tools.nim"
     import "./structs/structs.nim"    
     import "./classes/classes.nim"
+    include "./general_types/general_types.nim"
 
     when not defined(js):  
         include "./hashing/hashing.nim"   

@@ -13,6 +13,9 @@ include "./hashing_types.nim"
 include "./hashing_states.nim"
 include "./hashing_parse.nim"
 
+when declared(xxhash):#When the xxhash module is available
+    include "./hashing_xxh.nim"
+
 #Takes a string and calculates the hash returning it as a fhash (20 bytes) rather than a hex string
 func calcFHash(data: string): FHash {.inline.} =  
     when USE_NIM_CRYPTO:

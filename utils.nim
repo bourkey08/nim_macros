@@ -1,6 +1,6 @@
 #Implements standard utility functions and macros (with, log, swap, toString ect)
 #Set this variable to toggle debug mode
-import std/[macros]
+import std/[macros, macrocache]
 
 when not defined(standalone):
     import os
@@ -162,3 +162,31 @@ macro tIt(val: untyped, body: varargs[untyped]): untyped =
         block:
             let `ident` = `val`
             `body`
+
+const sFileCtr = CacheCounter"StaticFilesIDCounter"
+
+#Macro to bundle a static file into the final executable
+macro bundleStaticFile(srcPath: static string, destPath: static string): untyped =
+    result = newStmtList()
+
+    #Get a unique id for this file
+    let fileId = sFileCtr
+    sFileCtr.inc()
+
+    #Build the identifier for the const string that will hold the file data in the final executable
+    let constStrIdent = newIdentNode("staticFileData_" & $fileId.value)
+    
+    #Store the file in the final executable as a const
+    result.add quote do:
+        const `constStrIdent` = staticRead(joinPath("../../", `srcPath`))   
+
+        #Now add code to write the file to disk at runtime if it does not already exist
+        #First ensure the directory exists
+        let dir = parentDir(`destPath`)
+
+        if not dirExists(dir):
+            createDir(dir)
+
+        #Now write the file to disk if it does not already exist
+        if not fileExists(`destPath`):
+            writeFile(`destPath`, `constStrIdent`)
