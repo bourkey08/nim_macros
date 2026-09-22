@@ -14,7 +14,7 @@ macro destructor(t: typedesc, body: untyped): untyped =
     
     when t is ref:
         result = quote do:
-            proc `=destroy`(`x`: var typeof `t`()[]) =
+            proc `=destroy`(`x`: typeof `t`()[]) =
                 `body`
     else:
         result = quote do:

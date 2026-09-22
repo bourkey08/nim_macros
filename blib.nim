@@ -1,5 +1,9 @@
 #This is the main entry point into the standard library written by bourkey08
 
+#When the devblib flag is set explicitly import async dispatch to ensure the async macros are loaded
+when defined(devblib):
+    import std/[asyncdispatch]
+
 #This is the main entry point into the standard library written by bourkey08
 when not declared(with):    
     include "./num_utils.nim"
@@ -13,13 +17,15 @@ when not declared(with):
     include "./benchmark.nim"
     include "./options.nim"
     include "./static_strings.nim"
-
-    when declared(async):
-        include "./async_helpers/async_helpers.nim"
+    include "./static_tools/static_tools.nim"
+    import "./structs/structs.nim"    
+    import "./classes/classes.nim"
+    include "./general_types/general_types.nim"
 
     when not defined(js):  
-        include "./hashing.nim"   
+        include "./hashing/hashing.nim"   
         include "./network.nim"  
+        import "./hardware.nim"
 
         when defined(linux) or defined(macosx) or defined(windows):    
             include "./system.nim"    
@@ -38,9 +44,11 @@ when not declared(with):
     #The standard library time functions dont work properly on 8bit microcontrollers, i havent tested them on 16bit but expect this to fail as well due to assumption that int can be used to store an i32
     when sizeof(int) >= 4:
         import "./time.nim"  
+        when declared(async):
+            include "./async_helpers/async_helpers.nim"
 
     when declared(bconsole):
-        include "./console.nim"
+        include "./console/console.nim"
 
     when defined(js):
         include "./js.nim"

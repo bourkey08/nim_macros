@@ -2,6 +2,8 @@
 import json, macros, asyncdispatch
 import std/[terminal, os, strutils, strformat, times, math]
 
+include "./console_interactive.nim"
+
 #Define a macro for response, this will call .response with the data converted to json
 macro Response(data: untyped) =
     result = quote do:

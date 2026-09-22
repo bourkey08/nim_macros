@@ -6,6 +6,8 @@ import std/[asyncdispatch]
 #Include the child async librarys
 include "./async_trigger.nim"
 include "./async_limiter.nim"
+include "./async_bw_limiter.nim"
+include "./async_lock.nim"
 
 #Implements functionality for launching subprocesses and handling their output asynchronously
 include "./subprocess/subprocess.nim"

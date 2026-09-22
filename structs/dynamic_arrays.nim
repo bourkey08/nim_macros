@@ -1,0 +1,96 @@
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+#                                        Implements fixed length heap allocated arrays with a size set at runtime
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#---------------------------------------------- Types ----------------------------------------------
+#Type for a heap allocated array with a sized set at runtime
+type
+    dArrayObj*[T] = object
+        size: int
+        freed: bool = false#Flag that is set to true once the array has been freed from memory
+        data: ptr UncheckedArray[T]
+
+    dArray*[T] = ref dArrayObj[T]
+
+#----------------------------------- Constructors and Destructors ----------------------------------
+
+#Allocate a new dynamic array of a given size and type
+proc newdArray*[T](size: int): dArray[T] =
+    #Create an object for the dynamically allocated array
+    result = dArray[T](
+        size: size,
+        data: cast[ptr UncheckedArray[T]](alloc(size * sizeof(T)))
+    )
+
+proc `=destroy`*[T](self: dArrayObj[T]) =
+    ## Frees the memory used by the dynamic array
+    if not self.freed:
+        dealloc(cast[pointer](self.data))
+
+## Called to explicitly free the memory used by the dynamic array
+proc destroy*[T](self: dArray[T]) =
+    ## Frees the memory used by the dynamic array
+    if not self.freed:
+        dealloc(cast[pointer](self.data))
+        self.freed = true
+
+## Alias for destroy to free the memory used by the dynamic array
+proc free*[T](self: dArray[T]) =
+    ## Frees the memory used by the dynamic array
+    self.destroy()
+
+#------------------------- Properties for accessing data on the array type -------------------------
+## Returns the element at the given index in the array
+template `[]`*[T](self: dArray[T], index: int|int16|int32|int64|uint16|uint32|uint64): T =
+    let idx = int(index)
+    when compileOption("boundChecks"):
+        if idx < 0 or idx >= self.size:
+            raise newException(IndexError, "Index out of bounds")
+    self.data[idx]
+
+#Getter for slicing the dynamic array using a range
+template `[]`*[T](self: dArray[T], slice: HSlice[int, int]): seq[T] =
+    ## Returns a sequence containing the elements in the given range of the dynamic array
+    when compileOption("boundChecks"):
+        if slice.a < 0 or slice.b >= self.size:
+            raise newException(IndexError, "Slice out of bounds")
+
+    let length = slice.b - slice.a + 1
+    var resp = newSeq[T](length)
+
+    for i in 0..<length:
+        resp[i] = self.data[slice.a + i]
+    resp
+
+## Sets the element at the given index in the array to the given value
+template `[]=`*[T](self: dArray[T], index: int|int16|int32|int64|uint16|uint32|uint64, value: T) =
+    let idx = int(index)
+    when compileOption("boundChecks"):
+        if idx < 0 or idx >= self.size:
+            raise newException(IndexError, "Index out of bounds")
+    self.data[idx] = value
+
+## Returns the total number of allocated elements in the array (not the number of elements stored or the byte size of the array)
+proc `len`*[T](self: dArray[T]): int {.inline.} =
+    return self.size
+
+template getPtr*[T](self: dArray[T], idx: int): pointer =
+    ## Returns a pointer to the element at the given index in the array
+    when compileOption("boundChecks"):
+        if idx < 0 or idx >= self.size:
+            raise newException(IndexError, "Index out of bounds")
+    cast[pointer](self.data[idx].addr)
+
+#Called to get a view of a subset of the dynamic array as an open array, this is useful for passing a subset of the array to functions that take an open array as an argument
+template getView*[T](self: dArray[T], startIdx: int, length: int): untyped =
+    when compileOption("boundChecks"):
+        if `startIdx` < 0 or `startIdx` + `length` >= `self`.size or `startIdx` + `length` <= 0:
+            raise newException(IndexError, "View out of bounds startIdx: " & $`startIdx` & " length: " & $`length` & " size: " & $`self`.size)
+    toOpenArray(`self`.data, `startIdx`, `startIdx`+`length`)
+
+#Works the same as getView but uses absolute indexes rather than start and length
+template getViewAbs*[T](self: dArray[T], startIdx: int, endIdx: int): untyped =
+    when compileOption("boundChecks"):
+        if `startIdx` < 0 or `endIdx` - 1 >= `self`.size or `startIdx` > `endIdx` - 1:
+            raise newException(IndexError, "View out of bounds startIdx: " & $`startIdx` & " endIdx: " & $`endIdx` & " size: " & $`self`.size)
+    toOpenArray(`self`.data, `startIdx`, `endIdx` - 1)

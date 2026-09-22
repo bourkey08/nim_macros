@@ -156,7 +156,10 @@ template formatNumber(num: any, arg1: static auto = -2, arg2: static auto = -2):
         var parts = n.split(".")
 
         #Add commas to the integer part
-        var outstr: string = newString(parts[0].len + (parts[0].len div 3) + 2 + parts[1].len)
+        #The decimal part is only present when the number actually has one (ints and whole floats do not)
+        let decimalLen = (if parts.len > 1: parts[1].len else: 0)
+
+        var outstr: string = newString(parts[0].len + (parts[0].len div 3) + 2 + decimalLen)
 
         var idx: int = 0
         for i in 0..<parts[0].len:

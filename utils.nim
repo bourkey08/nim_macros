@@ -1,6 +1,6 @@
 #Implements standard utility functions and macros (with, log, swap, toString ect)
 #Set this variable to toggle debug mode
-import std/[macros]
+import std/[macros, macrocache]
 
 when not defined(standalone):
     import os
@@ -152,17 +152,30 @@ macro psizeof*(t: typedesc): untyped =
             sizeof (`t`)
 
 
+macro tIt(val: untyped, body: varargs[untyped]): untyped =
+    result = newStmtList()
 #Takes a look in the format expandLoop ident, {seq of values} and applys the body to each value in the seq
-macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
+    let ident = newIdentNode("it")
+
+    result.add quote do:
+        block:
+            let `ident` = `val`
+            `body`
+
+const sFileCtr = CacheCounter"StaticFilesIDCounter"
+
+#Macro to bundle a static file into the final executable
+macro bundleStaticFile(srcPath: static string, destPath: static string): untyped =
     result = newStmtList()
 
-    if v.kind != nnkIdent:
-        raise newException(ValueError, "First argument to expandLoop must be an identifier")
 
-    if rng.kind != nnkCurly:
-        raise newException(ValueError, "Second argument to expandLoop must be a bracket expression")
+    let fileId = sFileCtr
+    sFileCtr.inc()
     
-    for child in rng:
+    #Build the identifier for the const string that will hold the file data in the final executable
+    let constStrIdent = newIdentNode("staticFileData_" & $fileId.value)
+    
+    #Store the file in the final executable as a const
         result.add quote do:
             #This is a hack to allow expanding loops that both modify the child variables and those where the child variables are immutable
             when compiles(
@@ -179,4 +192,15 @@ macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
             else:
                 block:
                     let `v` = `child`
-                    `body`
+                    `body`        const `constStrIdent` = staticRead(joinPath("../../", `srcPath`))   
+
+        #Now add code to write the file to disk at runtime if it does not already exist
+        #First ensure the directory exists
+        let dir = parentDir(`destPath`)
+
+        if not dirExists(dir):
+            createDir(dir)
+
+        #Now write the file to disk if it does not already exist
+        if not fileExists(`destPath`):
+            writeFile(`destPath`, `constStrIdent`)
