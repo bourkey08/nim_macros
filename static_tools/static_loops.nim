@@ -47,7 +47,19 @@ macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
     
     for child in rng:
         result.add quote do:
-            block:
-                var `v` = `child`
-                `body`
-                `child` = `v`
+            #This is a hack to allow expanding loops that both modify the child variables and those where the child variables are immutable
+            when compiles(
+                block:
+                    var `v` = `child`
+                    `body`
+                    `child` = `v`
+            ):
+                block:
+                    var `v` = `child`
+                    `body`                
+                    `child` = `v`
+
+            else:
+                block:
+                    let `v` = `child`
+                    `body`

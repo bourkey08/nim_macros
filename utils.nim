@@ -168,7 +168,6 @@ const sFileCtr = CacheCounter"StaticFilesIDCounter"
 macro bundleStaticFile(srcPath: static string, destPath: static string): untyped =
     result = newStmtList()
 
-
     let fileId = sFileCtr
     sFileCtr.inc()
     
@@ -176,23 +175,8 @@ macro bundleStaticFile(srcPath: static string, destPath: static string): untyped
     let constStrIdent = newIdentNode("staticFileData_" & $fileId.value)
     
     #Store the file in the final executable as a const
-        result.add quote do:
-            #This is a hack to allow expanding loops that both modify the child variables and those where the child variables are immutable
-            when compiles(
-                block:
-                    var `v` = `child`
-                    `body`
-                    `child` = `v`
-            ):
-                block:
-                    var `v` = `child`
-                    `body`                
-                    `child` = `v`
-
-            else:
-                block:
-                    let `v` = `child`
-                    `body`        const `constStrIdent` = staticRead(joinPath("../../", `srcPath`))   
+    result.add quote do:
+        const `constStrIdent` = staticRead(joinPath("../../", `srcPath`))   
 
         #Now add code to write the file to disk at runtime if it does not already exist
         #First ensure the directory exists
