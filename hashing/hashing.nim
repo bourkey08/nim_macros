@@ -1,6 +1,6 @@
 #Implements a few shortcuts for hashing functions
 #Note: None of these are intended to be secure they are for hashing keys in tables/btrees ect
-import checksums/[sha1, sha2]
+import src/checksums/[sha1, sha2]
 import std/bitops
 
 #Set a flag to indicate if nim crypto should be used or not, if false then the built in sha1/sha2 librarys will be used
