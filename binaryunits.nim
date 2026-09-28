@@ -1,4 +1,4 @@
-import macros, strutils
+import macros, strutils, math
 
 #Takes a string containing a value with a unit and converts this to bytes/bits
 func parseBinaryUnits(rawText: string, retBits: static[bool]=false): int {.inline.} =
@@ -41,31 +41,31 @@ func parseBinaryUnits(rawText: string, retBits: static[bool]=false): int {.inlin
         multiplier = 1024
 
     of 'm':
-        multiplier = 1024 ** 2
+        multiplier = 1024 ^ 2
 
     of 'g':
-        multiplier = 1024 ** 3
+        multiplier = 1024 ^ 3
 
     of 't':
-        multiplier = 1024 ** 4
+        multiplier = 1024 ^ 4
 
     of 'p':
-        multiplier = 1024 ** 5
+        multiplier = 1024 ^ 5
 
     of 'e':
-        multiplier = 1024 ** 6
+        multiplier = 1024 ^ 6
 
     of 'z':
-        multiplier = 1024 ** 7
+        multiplier = 1024 ^ 7
 
     of 'y':
-        multiplier = 1024 ** 8
+        multiplier = 1024 ^ 8
 
     of 'r':
-        multiplier = 1024 ** 9
+        multiplier = 1024 ^ 9
 
     of 'q':
-        multiplier = 1024 ** 10
+        multiplier = 1024 ^ 10
 
     else:
         discard   
