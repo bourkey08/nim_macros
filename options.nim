@@ -23,8 +23,11 @@ template get[T](self: Opt[T]): T =
 
 #Add a template to allow calling get directly on a future of an option to avoid
 template get[T](self: Future[Opt[T]]): T =
-    ##  This allows for syntax like: let val = val.get() instead of let val = (await val).get()
-    let resp = await self
+    when isAsync:
+        ##  This allows for syntax like: let val = val.get() instead of let val = (await val).get()
+        let resp = await self        
+    else:
+        let resp = waitFor self
     if not resp.has:
         raise newException(ValueError, "Option value is not set")
     resp.val
