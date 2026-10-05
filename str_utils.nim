@@ -164,6 +164,17 @@ macro fromHex(args: string): seq[byte] =
 
         resp
 
+macro isHex(args: string): bool =
+    quote do:
+        var result = true
+
+        for c in `args`:
+            if not (c in '0'..'9' or c in 'A'..'F'):
+                result = false
+                break
+
+        result
+        
 #Shortcut functions for checking the contents of strings match specific criteria
 macro isdigit(val: string): bool =
     quote do:
