@@ -22,15 +22,16 @@ template get[T](self: Opt[T]): T =
     self.val
 
 #Add a template to allow calling get directly on a future of an option to avoid
-template get[T](self: Future[Opt[T]]): T =
-    when isAsync:
-        ##  This allows for syntax like: let val = val.get() instead of let val = (await val).get()
-        let resp = await self        
-    else:
-        let resp = waitFor self
-    if not resp.has:
-        raise newException(ValueError, "Option value is not set")
-    resp.val
+when declared(Future):
+    template get[T](self: Future[Opt[T]]): T =
+        when isAsync:
+            ##  This allows for syntax like: let val = val.get() instead of let val = (await val).get()
+            let resp = await self        
+        else:
+            let resp = waitFor self
+        if not resp.has:
+            raise newException(ValueError, "Option value is not set")
+        resp.val
     
 #As these methods have the same name and calling pattern as the std/options type they are renamed to some = som and none = non to avoid conflicts
 template som[T](val: T): untyped =
@@ -59,24 +60,26 @@ template get[T](self: OptE[T]): T =
         raise newException(ValueError, "Option value is not set, error code: " & $self.eCode & ", error message: " & self.eMsg)
     self.val
 
-template get[T](self: Future[OptE[T]]): T =
-    ##  This allows for syntax like: let val = val.get() instead of let val = (await val).get()
-    let resp = await self
-    if not resp.has:
-        raise newException(ValueError, "Option value is not set, error code: " & $resp.eCode & ", error message: " & resp.eMsg)
-    resp.val
-
 template getErr[T](self: OptE[T]): untyped =
     if self.has:
         raise newException(ValueError, "Option value is set, no error to get")
     (self.eCode, self.eMsg)
+    
+#Only include the future based templates if asyncdispatch is imported before the macros
+when declared(Future):
+    template get[T](self: Future[OptE[T]]): T =
+        ##  This allows for syntax like: let val = val.get() instead of let val = (await val).get()
+        let resp = await self
+        if not resp.has:
+            raise newException(ValueError, "Option value is not set, error code: " & $resp.eCode & ", error message: " & resp.eMsg)
+        resp.val
 
-template getErr[T](self: Future[OptE[T]]): untyped =
-    ##  This allows for syntax like: let (code, msg) = val.getErr() instead of let (code, msg) = (await val).getErr()
-    let resp = await self
-    if resp.has:
-        raise newException(ValueError, "Option value is set, no error to get")
-    (resp.eCode, resp.eMsg)
+    template getErr[T](self: Future[OptE[T]]): untyped =
+        ##  This allows for syntax like: let (code, msg) = val.getErr() instead of let (code, msg) = (await val).getErr()
+        let resp = await self
+        if resp.has:
+            raise newException(ValueError, "Option value is set, no error to get")
+        (resp.eCode, resp.eMsg)
     
 template respSuccess[T](val: T): untyped =
     (true, val, "", 0)#Need to set the unused fields as its a tuple
