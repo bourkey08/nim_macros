@@ -32,7 +32,8 @@ macro sFor(params: untyped, body: untyped): untyped =
     for i in 0..endRng:
         result.add quote do:
             block:
-                let `ident` = `i`
+                template `ident`(): untyped =
+                    `i`
                 `body`
 
 #Takes a look in the format expandLoop ident, {seq of values} and applys the body to each value in the seq
@@ -47,19 +48,7 @@ macro expandLoop(v: untyped, rng: untyped, body: untyped): untyped =
     
     for child in rng:
         result.add quote do:
-            #This is a hack to allow expanding loops that both modify the child variables and those where the child variables are immutable
-            when compiles(
-                block:
-                    var `v` = `child`
-                    `body`
-                    `child` = `v`
-            ):
-                block:
-                    var `v` = `child`
-                    `body`                
-                    `child` = `v`
-
-            else:
-                block:
-                    let `v` = `child`
-                    `body`
+            block:
+                template `v`(): untyped =
+                    `child`
+                `body`
