@@ -14,7 +14,7 @@ when not declared(with):
     include "./binaryunits.nim"
     include "./memory.nim"
     include "./debug_tools.nim"     
-    include "./benchmark.nim"
+    import "./benchmark.nim"
     include "./options.nim"
     include "./static_strings.nim"
     include "./static_tools/static_tools.nim"
