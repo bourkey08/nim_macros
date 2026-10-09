@@ -141,6 +141,26 @@ macro pFor(i: untyped, rnge: untyped, body: untyped): untyped =
         `jobDoneLock`.deinitLock()
         `jobDoneCond`.deinitCond()
 
+#Macro to allow calling pFor with pFor i in 0..12: instead of pFor i, 0..12:
+macro pFor(rng: untyped, body: untyped): untyped =
+    #Split up the params into the identifier and the range
+    if rng.kind != nnkInfix:
+        raise newException(ValueError, "First argument to staticFor must be an infix expression of the form 'ident in range'")
+
+    if rng[0].kind != nnkIdent or $rng[0] != "in":
+        raise newException(ValueError, "First argument to staticFor must be an infix expression of the form 'ident in range'")
+
+    if rng.len < 3:
+        raise newException(ValueError, "First argument to staticFor must be an infix expression of the form 'ident in range'")
+
+    let ident = rng[1]
+    let rng = rng[2]
+
+    #Define the list of ast nodes to generate for each iteration of the loop
+    result = quote do:
+        pFor(`ident`, `rng`, `body`)
+
+    
 macro pMap(data: untyped, body: untyped) : untyped =
     bPoolFuncCounter.inc()
     result = newStmtList()
