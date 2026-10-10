@@ -29,7 +29,7 @@ macro sFor(params: untyped, body: untyped): untyped =
     of "..<":
         endRng = endRng - 1
 
-    for i in 0..endRng:
+    for i in startRng..endRng:
         result.add quote do:
             block:
                 template `ident`(): untyped =
