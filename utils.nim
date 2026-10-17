@@ -130,11 +130,11 @@ template pass(): untyped =
 #Macro to define variables that should have there value inlined (but cant be constants)
 macro def(x: untyped) =
     result = newStmtList()
-
+    
     #Split the input into ident and val
     if x[0].kind != nnkIdent:
         raise newException(ValueError, "Identifier expected")
-    let ident = x[0]
+    let ident = newIdentNode($x[0])
     let val = x[1]
     result.add quote do:
         template `ident`(): untyped =
