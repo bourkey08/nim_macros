@@ -4,26 +4,26 @@
 
 #-------------------------------------------------------- Define the types for the tiered lock -------------------------------------------------------
 
-type AsyncLockTiered = ref object
+type AsyncLockTiered* = ref object
     parentLock: AsyncLockDual#The parent lock that is used to acquire a non exclusive lock on when this lock is acquired
     held: bool = false#If the lock is held exclusively
     futIsSet: bool = false#If the future exists
     fut: Future[void]
 
-type AsyncLockTieredHold = object
+type AsyncLockTieredHold* = object
     parent: AsyncLockTiered
     parentLock: AsyncLockDualHold#The parent lock object also needs to be released on release of this lock
     held: bool = true
 
 #------------------------------------------------------- Define the methods for the tiered lock ------------------------------------------------------
 
-proc newAsyncLockTiered(parent: AsyncLockDual): AsyncLockTiered =
+proc newAsyncLockTiered*(parent: AsyncLockDual): AsyncLockTiered =
     result = AsyncLockTiered(
         parentLock: parent
     )
 
 #Called to acquire the lock, waits for the lock to become available before returning
-proc acquire(self: AsyncLockTiered, timeout: auto = 0): Future[Opt[AsyncLockTieredHold]] {.async.} =
+proc acquire*(self: AsyncLockTiered, timeout: auto = 0): Future[Opt[AsyncLockTieredHold]] {.async.} =
     let tOut = timeout.uint64
 
     if tOut > 0:
@@ -31,6 +31,8 @@ proc acquire(self: AsyncLockTiered, timeout: auto = 0): Future[Opt[AsyncLockTier
         while true:
             if not self.held and not self.parentLock.heldExclusive:#If this lock is already held or the parent lock is held exclusively then we cannot acquire this lock yet
                 #Check if the parent lock can be acquired non exclusively, if it can then acquire it and return the tiered lock
+                self.held = true
+
                 let (pOk, pLock) = await self.parentLock.acquire(false, tOut)
 
                 if pOk:
@@ -54,6 +56,7 @@ proc acquire(self: AsyncLockTiered, timeout: auto = 0): Future[Opt[AsyncLockTier
         while true:#Loop until the lock is acquired
             if not self.held:                
                 #Check if the parent lock can be acquired non exclusively, if it can then acquire it and return the tiered lock
+                self.held = true
                 let (pOk, pLock) = await self.parentLock.acquire(false)
 
                 if pOk:
@@ -67,7 +70,7 @@ proc acquire(self: AsyncLockTiered, timeout: auto = 0): Future[Opt[AsyncLockTier
                 self.futIsSet = true
             await self.fut
 
-proc release(self: var AsyncLockTieredHold) =
+proc release*(self: var AsyncLockTieredHold) =
     if self.held:
         self.held = false#Mark this ref instance as not held to prevent double release
         self.parent.held = false

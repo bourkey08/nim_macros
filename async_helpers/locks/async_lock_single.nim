@@ -3,22 +3,22 @@
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #------------------------------------------------------------------ Define the types -----------------------------------------------------------------
-type AsyncLock = ref object
+type AsyncLock* = ref object
     held: bool = false    
     futIsSet: bool = false#If the future exists
     fut: Future[void]
 
 #Object that is returned when a lock is acquire, this ensures that the lock cannot be released by logic that did not acquire it
-type AsyncLockHold = object
+type AsyncLockHold* = object
     parent: AsyncLock
     held: bool = true
 
 #------------------------------- Methods for the standard async lock -------------------------------
-proc newAsyncLock(): AsyncLock =
+proc newAsyncLock*(): AsyncLock =
     result = AsyncLock()
 
 #Called to acquire the lock, waits for the lock to become available before returning
-proc acquire(self: AsyncLock, timeout: auto = 0): Future[Opt[AsyncLockHold]] {.async.} =
+proc acquire*(self: AsyncLock, timeout: auto = 0): Future[Opt[AsyncLockHold]] {.async.} =
     let tOut = timeout.uint64
 
     if tOut > 0:
@@ -52,7 +52,7 @@ proc acquire(self: AsyncLock, timeout: auto = 0): Future[Opt[AsyncLockHold]] {.a
                     self.futIsSet = true
                 await self.fut
 
-proc release(self: var AsyncLockHold) =
+proc release*(self: var AsyncLockHold) =
     if self.held:
         self.held = false#Mark this ref instance as not held to prevent double release
         self.parent.held = false

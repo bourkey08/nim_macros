@@ -4,27 +4,27 @@
 
 #------------------------------------------------------------------ Define the types -----------------------------------------------------------------
 #-- Lock that allows for both non exclusive and exclusive operations, all non exclusive locks must release before the exclusive lock can be acquired -
-type AsyncLockDual = ref object
+type AsyncLockDual* = ref object
     exclPending: bool = false#If an exclusive lock is pending, this prevents new non exclusive locks from being acquired
     heldExclusive: bool = false#If the lock is held exclusively
     heldNonExclusive: int = 0#The number of non exclusive locks that are currently held
     trigger: AsyncTrigger#An async trigger is used as its fired each time a lock is released (or either kind)
 
-type AsyncLockDualHold = object
+type AsyncLockDualHold* = object
     parent: AsyncLockDual
     heldExclusive: bool = false#If the lock is held exclusively
     heldNonExclusive: bool = false#If the lock is held non exclusively
 
 #---------------------------------- Methods for the dual mode lock ---------------------------------
-proc newAsyncLockDual(): AsyncLockDual =
+proc newAsyncLockDual*(): AsyncLockDual =
     result = AsyncLockDual(
         trigger: newAsyncTrigger(true)#Auto reset trigger
     )
 
-proc acquire(self: AsyncLockDual, exclusive: bool = false, timeout: auto = 0): Future[Opt[AsyncLockDualHold]] {.async.} =
+proc acquire*(self: AsyncLockDual, exclusive: bool = false, timeout: auto = 0): Future[Opt[AsyncLockDualHold]] {.async.} =
     let tOut = timeout.uint64
 
-    if self.exclPending:
+    if exclusive:
         self.exclPending = true#Mark that an exclusive lock is pending, this prevents new non exclusive locks from being acquired
 
     if tOut > 0:
@@ -63,7 +63,7 @@ proc acquire(self: AsyncLockDual, exclusive: bool = false, timeout: auto = 0): F
                     return som(AsyncLockDualHold(parent: self, heldNonExclusive: true))
             await self.trigger.wait()
 
-proc release(self: var AsyncLockDualHold) =
+proc release*(self: var AsyncLockDualHold) =
     if self.heldExclusive:
         self.heldExclusive = false#Mark this ref instance as not held to prevent double release
         self.parent.heldExclusive = false
