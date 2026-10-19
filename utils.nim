@@ -154,7 +154,7 @@ macro psizeof*(t: typedesc): untyped =
 
 macro tIt(val: untyped, body: varargs[untyped]): untyped =
     result = newStmtList()
-#Takes a look in the format expandLoop ident, {seq of values} and applys the body to each value in the seq
+    #Takes a look in the format expandLoop ident, {seq of values} and applys the body to each value in the seq
     let ident = newIdentNode("it")
 
     result.add quote do:
