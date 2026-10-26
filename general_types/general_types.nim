@@ -13,7 +13,7 @@ type IPPort = object
 
 
 #---------------------------------------------------------- Functions for parsing an address ---------------------------------------------------------
-func parseIPStr(v: string): IPAddr =
+func parseIPStr(v: string): IPAddr {.inline.} =
     var parts = v.split('.')
     if parts.len != 4:
         raise newException(ValueError, "Invalid IP address format")
@@ -27,7 +27,7 @@ func parseIPStr(v: string): IPAddr =
 
     return ip
 
-func parseIPPortStr(v: string): IPPort =
+func parseIPPortStr(v: string): IPPort {.inline.} =
     var parts = v.split(':')
     if parts.len != 2:
         raise newException(ValueError, "Invalid IP:Port format")
@@ -38,7 +38,7 @@ func parseIPPortStr(v: string): IPPort =
 
     return ipPort
 
-func parseMacStr(v: string): MacAddress =
+func parseMacStr(v: string): MacAddress {.inline.} =
     var parts = v.split(':')
     if parts.len != 6:
         raise newException(ValueError, "Invalid MAC address format")
@@ -71,7 +71,7 @@ func newIPPort(ip: IPAddr|string|openArray[byte], port: uint16): IPPort =
     result.ip = newIPAddr(ip)
     result.port = port
 
-#Define methods to convert ips, ip:ports, and mac address to strings in the standard formats
+#---------------------------- Define methods to convert ips, ip:ports, and mac address to strings in the standard formats ----------------------------
 func `$`(v: IPAddr): string {.inline.} =
     return $v[0] & "." & $v[1] & "." & $v[2] & "." & $v[3]
 
@@ -80,3 +80,27 @@ func `$`(v: IPPort): string {.inline.} =
 
 func `$`(v: MacAddress): string {.inline.} =
     return $v[0] & ":" & $v[1] & ":" & $v[2] & ":" & $v[3] & ":" & $v[4] & ":" & $v[5]
+
+#------------------------------------------------------ Define aliases for various above methods -----------------------------------------------------
+macro buildAliases(args: varargs[untyped]): untyped =
+    result = newStmtList()
+
+    #Edit this to add additional aliases for functions
+    var aliases: seq[tuple[a: string, f: string]] = @[
+        ("parseIP", "parseIPStr"),
+        ("parseIPAddr", "parseIPStr"),
+        ("parseIPPort", "parseIPPortStr"),
+        ("parseMac", "parseMacStr"),
+        ("initIPAddr", "newIPAddr"),
+        ("initIPPort", "newIPPort")
+    ]
+
+    for (alias, funcName) in aliases:
+        let aliasIdent = newIdentNode(alias)
+        let funcIdent = newIdentNode(funcName)
+
+        result.add quote do:
+            template `aliasIdent`(args: varargs[untyped]): untyped =
+                `funcIdent`(args)
+
+buildAliases()
