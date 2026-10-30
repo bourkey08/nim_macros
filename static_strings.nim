@@ -30,9 +30,6 @@ func `==`[S1, S2](a: sString[S1], b: sString[S2]): bool {.inline.} =
 
     return true
 
-func `!=`[S1, S2](a: sString[S1], b: sString[S2]): bool {.inline.} =
-    result = not (a == b)
-
 func `+=`[S](a: var sString[S], b: string) {.inline.} =
     if a.len.int + b.len > a.data.len:
         raise newException(ValueError, "String too long to append to sString")
